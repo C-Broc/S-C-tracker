@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Strength and Conditioning Tracker</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
+  input, textarea { font-family: inherit; font-size: 15px; background: #fff; border: 0.5px solid #ccc; border-radius: 8px; padding: 8px 10px; color: #1a1a1a; outline: none; }
+  input:focus, textarea:focus { border-color: #888; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
+  button { font-family: inherit; font-size: 14px; cursor: pointer; }
+  * { -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+const AMBER = "#BA7517";
+const TEAL = "#0F6E56";
+const defaultExercises = { warmup: [], main: [], warmupTarget: "", mainTarget: "" };
+const VIEWS = { SETUP: "setup", LOG: "log", EXPORT: "export" };
+
+const emptyLog = (ex) => ({
+  cardio: "",
+  warmup: ex.warmup.map(n => ({ name: n, sets: "", reps: "", weight: "", notes: "" })),
+  main: ex.main.map(n => ({ name: n, sets: "", reps: "", weight: "", notes: "" })),
+  cooldown: false
+});
+
+function SectionBanner({ color, label }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "1.5rem 0 1rem" }}>
+      <div style={{ width: 4, height: 20, borderRadius: 2, background: color }} />
+      <span style={{ fontSize: 12, fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</span>
+    </div>
+  );
+}
+
+function TargetBanner({ text, color }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, background: color + "18", border: `0.5px solid ${color}44`, borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.05em" }}>Target</span>
+      <span style={{ fontSize: 13, color: "#1a1a1a" }}>{text}</span>
+    </div>
+  );
+}
+
+function ExCard({ row, onUpdate, accent }) {
+  return (
+    <div style={{ background: "#fff", border: `0.5px solid ${accent}33`, borderLeft: `3px solid ${accent}`, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
+      <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 12 }}>{row.name}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        {[["Sets","sets","number"],["Reps","reps","number"]].map(([lbl, field, type]) => (
+          <div key={field}>
+            <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>{lbl}</label>
+            <input style={{ width: "100%" }} type={type} min="0" value={row[field]} onChange={e => onUpdate(field, e.target.value)} />
+          </div>
+        ))}
+      </div>
+      <div style={{ marginBottom: 8 }}>
+        <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Weight</label>
+        <input style={{ width: "100%" }} placeholder="kg / lb" value={row.weight} onChange={e => onUpdate("weight", e.target.value)} />
+      </div>
+      <div>
+        <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Notes</label>
+        <input style={{ width: "100%" }} placeholder="Any notes..." value={row.notes} onChange={e => onUpdate("notes", e.target.value)} />
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [exercises, setExercises] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("sc_exercises") || "null") || defaultExercises; } catch { return defaultExercises; }
+  });
+  const [log, setLog] = useState(() => emptyLog(exercises));
+  const [view, setView] = useState(exercises.warmup.length + exercises.main.length > 0 ? VIEWS.LOG : VIEWS.SETUP);
+  const [newEx, setNewEx] = useState({ warmup: "", main: "" });
+  const [exportText, setExportText] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const saveExercises = (ex) => {
+    setExercises(ex);
+    try { localStorage.setItem("sc_exercises", JSON.stringify(ex)); } catch {}
+    setLog(emptyLog(ex));
+  };
+
+  const updateTarget = (group, val) => saveExercises({ ...exercises, [group === "warmup" ? "warmupTarget" : "mainTarget"]: val });
+
+  const addEx = (group) => {
+    const val = newEx[group].trim();
+    if (!val) return;
+    saveExercises({ ...exercises, [group]: [...exercises[group], val] });
+    setNewEx(p => ({ ...p, [group]: "" }));
+  };
+
+  const removeEx = (group, i) => saveExercises({ ...exercises, [group]: exercises[group].filter((_, j) => j !== i) });
+
+  const updateLogRow = useCallback((group, i, field, val) => {
+    setLog(prev => {
+      const rows = [...prev[group]];
+      rows[i] = { ...rows[i], [field]: val };
+      return { ...prev, [group]: rows };
+    });
+  }, []);
+
+  const buildExport = () => {
+    const date = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    let txt = `WORKOUT LOG — ${date}\n` + "=".repeat(40) + "\n\n";
+    const section = (label, rows, cardio) => {
+      txt += `${label.toUpperCase()}\n` + "-".repeat(24) + "\n";
+      if (cardio) txt += `Cardio: ${cardio}\n\n`;
+      rows.forEach(r => {
+        txt += `${r.name}\n`;
+        const parts = [];
+        if (r.sets) parts.push(`Sets: ${r.sets}`);
+        if (r.reps) parts.push(`Reps: ${r.reps}`);
+        if (r.weight) parts.push(`Weight: ${r.weight}`);
+        if (parts.length) txt += `  ${parts.join(" | ")}\n`;
+        if (r.notes) txt += `  Notes: ${r.notes}\n`;
+        txt += "\n";
+      });
+    };
+    if (log.warmup.length || log.cardio) section("Warm-up", log.warmup, log.cardio);
+    if (log.main.length) section("Main exercises", log.main, "");
+    txt += `Cooldown completed: ${log.cooldown ? "Yes" : "No"}\n`;
+    setExportText(txt);
+    setView(VIEWS.EXPORT);
+  };
+
+  const copy = () => {
+    navigator.clipboard.writeText(exportText).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+  };
+
+  const navBtn = (active) => ({
+    background: active ? "#e8e8e5" : "transparent",
+    border: "0.5px solid #ccc",
+    borderRadius: 8,
+    padding: "7px 16px",
+    fontSize: 13,
+    cursor: "pointer",
+    color: "#1a1a1a",
+    fontWeight: active ? 600 : 400
+  });
+
+  return (
+    <div style={{ maxWidth: 520, margin: "0 auto", padding: "1.25rem 1rem 3rem" }}>
+      <p style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px", color: "#1a1a1a" }}>Strength and Conditioning</p>
+      <p style={{ fontSize: 13, color: "#666", margin: "0 0 1.5rem" }}>Log your session and export for your coach.</p>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: "1.5rem" }}>
+        <button style={navBtn(view === VIEWS.SETUP)} onClick={() => setView(VIEWS.SETUP)}>Setup</button>
+        <button style={navBtn(view === VIEWS.LOG)} onClick={() => setView(VIEWS.LOG)}>Log workout</button>
+        {exportText && <button style={navBtn(view === VIEWS.EXPORT)} onClick={() => setView(VIEWS.EXPORT)}>Export</button>}
+      </div>
+
+      {view === VIEWS.SETUP && (
+        <div>
+          {["warmup","main"].map(group => {
+            const color = group === "warmup" ? AMBER : TEAL;
+            const label = group === "warmup" ? "Warm-up exercises" : "Main exercises";
+            return (
+              <div key={group}>
+                <SectionBanner color={color} label={label} />
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 12, color: "#666", marginBottom: 4, display: "block" }}>Target sets / reps</label>
+                  <input style={{ width: "100%" }} placeholder="e.g. 3 sets × 12 reps" value={group === "warmup" ? exercises.warmupTarget : exercises.mainTarget} onChange={e => updateTarget(group, e.target.value)} />
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                  {exercises[group].map((ex, i) => (
+                    <span key={i} style={{ fontSize: 12, background: "#e8e8e5", border: "0.5px solid #ccc", borderRadius: 8, padding: "4px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+                      {ex}
+                      <button style={{ background: "transparent", border: "none", cursor: "pointer", color: "#888", fontSize: 16, padding: "0 2px", lineHeight: 1 }} onClick={() => removeEx(group, i)}>×</button>
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                  <input style={{ flex: 1 }} placeholder={`Add ${group === "warmup" ? "warm-up" : "main"} exercise`} value={newEx[group]} onChange={e => setNewEx(p => ({ ...p, [group]: e.target.value }))} onKeyDown={e => e.key === "Enter" && addEx(group)} />
+                  <button style={{ background: "transparent", border: "0.5px solid #ccc", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", color: "#1a1a1a" }} onClick={() => addEx(group)}>Add</button>
+                </div>
+              </div>
+            );
+          })}
+          {exercises.warmup.length + exercises.main.length > 0 && (
+            <button style={{ background: TEAL, border: "none", borderRadius: 8, padding: "13px 20px", fontSize: 15, cursor: "pointer", color: "#fff", fontWeight: 600, width: "100%", marginTop: "1.5rem" }} onClick={() => setView(VIEWS.LOG)}>Start logging →</button>
+          )}
+        </div>
+      )}
+
+      {view === VIEWS.LOG && (
+        <div>
+          <SectionBanner color={AMBER} label="Warm-up" />
+          <div style={{ background: "#fff", border: `0.5px solid ${AMBER}33`, borderLeft: `3px solid ${AMBER}`, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 10 }}>2–4 min cardio</div>
+            <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>What did you do?</label>
+            <input style={{ width: "100%" }} placeholder="e.g. rowing machine, skipping, bike..." value={log.cardio} onChange={e => setLog(p => ({ ...p, cardio: e.target.value }))} />
+          </div>
+          {exercises.warmupTarget && <TargetBanner text={exercises.warmupTarget} color={AMBER} />}
+          {log.warmup.map((row, i) => <ExCard key={i} row={row} onUpdate={(f, v) => updateLogRow("warmup", i, f, v)} accent={AMBER} />)}
+
+          <div style={{ borderTop: "2px solid #ddd", margin: "1.75rem 0" }} />
+
+          <SectionBanner color={TEAL} label="Main exercises" />
+          {exercises.mainTarget && <TargetBanner text={exercises.mainTarget} color={TEAL} />}
+          {log.main.length === 0 && <p style={{ color: "#888", fontSize: 14 }}>No main exercises set up yet.</p>}
+          {log.main.map((row, i) => <ExCard key={i} row={row} onUpdate={(f, v) => updateLogRow("main", i, f, v)} accent={TEAL} />)}
+
+          <div onClick={() => setLog(p => ({ ...p, cooldown: !p.cooldown }))}
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginTop: 16, borderRadius: 12, background: log.cooldown ? TEAL + "18" : "#f0f0ee", border: `0.5px solid ${log.cooldown ? TEAL : "#ccc"}`, cursor: "pointer" }}>
+            <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${log.cooldown ? TEAL : "#bbb"}`, background: log.cooldown ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {log.cooldown && <svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 500, color: log.cooldown ? TEAL : "#1a1a1a" }}>Cooldown completed</span>
+          </div>
+
+          <button style={{ background: TEAL, border: "none", borderRadius: 8, padding: "13px 20px", fontSize: 15, cursor: "pointer", color: "#fff", fontWeight: 600, width: "100%", marginTop: 12 }} onClick={buildExport}>Generate export →</button>
+        </div>
+      )}
+
+      {view === VIEWS.EXPORT && (
+        <div>
+          <textarea style={{ width: "100%", fontFamily: "monospace", fontSize: 12, minHeight: 260, resize: "vertical", marginBottom: 10 }} readOnly value={exportText} />
+          <button style={{ background: TEAL, border: "none", borderRadius: 8, padding: "13px 20px", fontSize: 15, cursor: "pointer", color: "#fff", fontWeight: 600, width: "100%", marginBottom: 8 }} onClick={copy}>{copied ? "Copied!" : "Copy to clipboard"}</button>
+          <button style={{ background: "transparent", border: "0.5px solid #ccc", borderRadius: 8, padding: "11px 20px", fontSize: 13, cursor: "pointer", color: "#666", width: "100%" }} onClick={() => { setLog(emptyLog(exercises)); setView(VIEWS.LOG); }}>Start new session</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
