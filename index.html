@@ -32,8 +32,12 @@ const emptyLog = (w) => ({
   main: w.main.map(n => ({ name: n, sets: "", reps: "", weight: "", notes: "" }))
 });
 
-const load = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch { return fallback; } };
-const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
+const load = (key, fallback) => {
+  try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch { return fallback; }
+};
+const save = (key, val) => {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+};
 
 function SectionBanner({ color, label }) {
   return (
@@ -46,7 +50,7 @@ function SectionBanner({ color, label }) {
 
 function TargetBanner({ text, color }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, background: color + "18", border: `0.5px solid ${color}44`, borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, background: color + "18", border: "0.5px solid " + color + "44", borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.05em" }}>Target</span>
       <span style={{ fontSize: 13, color: "#1a1a1a" }}>{text}</span>
     </div>
@@ -55,15 +59,17 @@ function TargetBanner({ text, color }) {
 
 function ExCard({ row, onUpdate, accent }) {
   return (
-    <div style={{ background: "#fff", border: `0.5px solid ${accent}33`, borderLeft: `3px solid ${accent}`, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
+    <div style={{ background: "#fff", border: "0.5px solid " + accent + "33", borderLeft: "3px solid " + accent, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
       <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 12 }}>{row.name}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-        {[["Sets","sets","number"],["Reps","reps","number"]].map(([lbl,field,type]) => (
-          <div key={field}>
-            <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>{lbl}</label>
-            <input style={{ width: "100%" }} type={type} min="0" value={row[field]} onChange={e => onUpdate(field, e.target.value)} />
-          </div>
-        ))}
+        <div>
+          <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Sets</label>
+          <input style={{ width: "100%" }} type="number" min="0" value={row.sets} onChange={e => onUpdate("sets", e.target.value)} />
+        </div>
+        <div>
+          <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Reps</label>
+          <input style={{ width: "100%" }} type="number" min="0" value={row.reps} onChange={e => onUpdate("reps", e.target.value)} />
+        </div>
       </div>
       <div style={{ marginBottom: 8 }}>
         <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Weight</label>
@@ -77,32 +83,31 @@ function ExCard({ row, onUpdate, accent }) {
   );
 }
 
-function DraggableList({ items, onReorder, onRemove }) {
+function ReorderList({ items, onReorder, onRemove }) {
   const move = (i, dir) => {
-    const reordered = [...items];
     const to = i + dir;
-    if (to < 0 || to >= reordered.length) return;
-    [reordered[i], reordered[to]] = [reordered[to], reordered[i]];
-    onReorder(reordered);
+    if (to < 0 || to >= items.length) return;
+    const r = [...items];
+    const tmp = r[i]; r[i] = r[to]; r[to] = tmp;
+    onReorder(r);
   };
-
   return (
     <div style={{ marginBottom: 12 }}>
       {items.map((ex, i) => (
-        <div key={ex + i} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "0.5px solid #ddd", borderRadius: 8, padding: "10px 12px", marginBottom: 6 }}>
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "0.5px solid #ddd", borderRadius: 8, padding: "10px 12px", marginBottom: 6 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <button onClick={() => move(i, -1)} disabled={i === 0} style={{ background: "transparent", border: "none", cursor: i === 0 ? "default" : "pointer", color: i === 0 ? "#ddd" : "#888", fontSize: 14, lineHeight: 1, padding: 0 }}>▲</button>
-            <button onClick={() => move(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: "none", cursor: i === items.length - 1 ? "default" : "pointer", color: i === items.length - 1 ? "#ddd" : "#888", fontSize: 14, lineHeight: 1, padding: 0 }}>▼</button>
+            <button onClick={() => move(i, -1)} style={{ background: "transparent", border: "none", cursor: "pointer", color: i === 0 ? "#ddd" : "#888", fontSize: 13, lineHeight: 1, padding: 0 }}>▲</button>
+            <button onClick={() => move(i, 1)} style={{ background: "transparent", border: "none", cursor: "pointer", color: i === items.length - 1 ? "#ddd" : "#888", fontSize: 13, lineHeight: 1, padding: 0 }}>▼</button>
           </div>
           <span style={{ flex: 1, fontSize: 14, color: "#1a1a1a" }}>{ex}</span>
-          <button style={{ background: "transparent", border: "none", cursor: "pointer", color: "#aaa", fontSize: 18, lineHeight: 1, padding: "0 2px" }} onClick={() => onRemove(i)}>×</button>
+          <button onClick={() => onRemove(i)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#aaa", fontSize: 18, lineHeight: 1, padding: "0 2px" }}>×</button>
         </div>
       ))}
     </div>
   );
 }
 
-
+function App() {
   const [workouts, setWorkouts] = useState(() => load("sc_workouts", [defaultWorkout("Workout A"), defaultWorkout("Workout B")]));
   const [activeIdx, setActiveIdx] = useState(() => load("sc_activeIdx", 0));
   const [logs, setLogs] = useState(() => load("sc_logs", {}));
@@ -115,7 +120,7 @@ function DraggableList({ items, onReorder, onRemove }) {
   const [historyWorkout, setHistoryWorkout] = useState(0);
 
   const workout = workouts[activeIdx] || workouts[0];
-  const logKey = `w${activeIdx}`;
+  const logKey = "w" + activeIdx;
   const log = logs[logKey] || emptyLog(workout);
 
   const saveView = (v) => { setView(v); save("sc_view", v); };
@@ -123,7 +128,7 @@ function DraggableList({ items, onReorder, onRemove }) {
   const saveWorkouts = (w) => { setWorkouts(w); save("sc_workouts", w); };
 
   const saveLog = useCallback((newLog) => {
-    setLogs(prev => { const updated = { ...prev, [logKey]: newLog }; save("sc_logs", updated); return updated; });
+    setLogs(prev => { const u = { ...prev, [logKey]: newLog }; save("sc_logs", u); return u; });
   }, [logKey]);
 
   const updateLogRow = useCallback((group, i, field, val) => {
@@ -131,80 +136,77 @@ function DraggableList({ items, onReorder, onRemove }) {
       const cur = prev[logKey] || emptyLog(workout);
       const rows = [...cur[group]];
       rows[i] = { ...rows[i], [field]: val };
-      const updated = { ...prev, [logKey]: { ...cur, [group]: rows } };
-      save("sc_logs", updated);
-      return updated;
+      const u = { ...prev, [logKey]: { ...cur, [group]: rows } };
+      save("sc_logs", u);
+      return u;
     });
   }, [logKey, workout]);
 
   const updateWorkout = (field, val) => {
-    const updated = workouts.map((w, i) => i === activeIdx ? { ...w, [field]: val } : w);
-    saveWorkouts(updated);
+    saveWorkouts(workouts.map((w, i) => i === activeIdx ? { ...w, [field]: val } : w));
   };
 
   const reorderEx = (group, reordered) => {
-    const updated = workouts.map((w, i) => i === activeIdx ? { ...w, [group]: reordered } : w);
-    saveWorkouts(updated);
+    saveWorkouts(workouts.map((w, i) => i === activeIdx ? { ...w, [group]: reordered } : w));
   };
 
   const addEx = (group) => {
     const val = newEx[group].trim();
     if (!val) return;
-    const updated = workouts.map((w, i) => i === activeIdx ? { ...w, [group]: [...w[group], val] } : w);
-    saveWorkouts(updated);
+    saveWorkouts(workouts.map((w, i) => i === activeIdx ? { ...w, [group]: [...w[group], val] } : w));
     setNewEx(p => ({ ...p, [group]: "" }));
   };
 
   const removeEx = (group, i) => {
-    const updated = workouts.map((w, idx) => idx === activeIdx ? { ...w, [group]: w[group].filter((_, j) => j !== i) } : w);
-    saveWorkouts(updated);
+    saveWorkouts(workouts.map((w, idx) => idx === activeIdx ? { ...w, [group]: w[group].filter((_, j) => j !== i) } : w));
   };
 
   const buildExport = () => {
     const date = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    let txt = `${workout.name.toUpperCase()} — ${date}\n` + "=".repeat(40) + "\n\n";
+    let txt = workout.name.toUpperCase() + " — " + date + "\n" + "=".repeat(40) + "\n\n";
     const section = (label, rows, cardio) => {
-      txt += `${label.toUpperCase()}\n` + "-".repeat(24) + "\n";
-      if (cardio) txt += `Cardio: ${cardio}\n\n`;
+      txt += label.toUpperCase() + "\n" + "-".repeat(24) + "\n";
+      if (cardio) txt += "Cardio: " + cardio + "\n\n";
       rows.forEach(r => {
-        txt += `${r.name}\n`;
+        txt += r.name + "\n";
         const parts = [];
-        if (r.sets) parts.push(`Sets: ${r.sets}`);
-        if (r.reps) parts.push(`Reps: ${r.reps}`);
-        if (r.weight) parts.push(`Weight: ${r.weight}`);
-        if (parts.length) txt += `  ${parts.join(" | ")}\n`;
-        if (r.notes) txt += `  Notes: ${r.notes}\n`;
+        if (r.sets) parts.push("Sets: " + r.sets);
+        if (r.reps) parts.push("Reps: " + r.reps);
+        if (r.weight) parts.push("Weight: " + r.weight);
+        if (parts.length) txt += "  " + parts.join(" | ") + "\n";
+        if (r.notes) txt += "  Notes: " + r.notes + "\n";
         txt += "\n";
       });
     };
     if (log.warmup.length || log.cardio) section("Warm-up", log.warmup, log.cardio);
     if (log.main.length) section("Main exercises", log.main, "");
-    txt += `Cooldown completed: ${log.cooldown ? "Yes" : "No"}\n`;
-    if (log.sessionNotes) txt += `\nSession notes: ${log.sessionNotes}\n`;
+    txt += "Cooldown completed: " + (log.cooldown ? "Yes" : "No") + "\n";
+    if (log.sessionNotes) txt += "\nSession notes: " + log.sessionNotes + "\n";
 
     const sessionRecord = { date: new Date().toISOString(), dateLabel: date, workoutName: workout.name, cardio: log.cardio, cooldown: log.cooldown, sessionNotes: log.sessionNotes, warmup: log.warmup, main: log.main };
     setHistory(prev => {
-      const key = `w${activeIdx}`;
-      const updated = { ...prev, [key]: [sessionRecord, ...(prev[key] || [])] };
-      save("sc_history", updated);
-      return updated;
+      const u = { ...prev, [logKey]: [sessionRecord, ...(prev[logKey] || [])] };
+      save("sc_history", u);
+      return u;
     });
-
     setExportText(txt);
     saveView(VIEWS.EXPORT);
   };
 
-  const copy = () => { navigator.clipboard.writeText(exportText).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
+  const copy = () => {
+    navigator.clipboard.writeText(exportText).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+  };
 
   const exportAllData = () => {
     const blob = new Blob([JSON.stringify({ workouts, history }, null, 2)], { type: "application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-    a.download = `sc-tracker-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "sc-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click();
   };
 
   const navBtn = (active) => ({ background: active ? "#e8e8e5" : "transparent", border: "0.5px solid #ccc", borderRadius: 8, padding: "7px 16px", fontSize: 13, cursor: "pointer", color: "#1a1a1a", fontWeight: active ? 600 : 400 });
-
-  const pill = (color, active) => ({ background: active ? color : "transparent", border: `1.5px solid ${color}`, borderRadius: 20, padding: "8px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", color: active ? "#fff" : color });
+  const pill = (color, active) => ({ background: active ? color : "transparent", border: "1.5px solid " + color, borderRadius: 20, padding: "8px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", color: active ? "#fff" : color });
 
   if (view === VIEWS.HOME) return (
     <div style={{ maxWidth: 520, margin: "0 auto", padding: "2rem 1rem" }}>
@@ -213,7 +215,7 @@ function DraggableList({ items, onReorder, onRemove }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: "2rem" }}>
         {workouts.map((w, i) => (
           <button key={i} onClick={() => { setActiveIdx(i); save("sc_activeIdx", i); saveView(VIEWS.LOG); }}
-            style={{ background: "#fff", border: `0.5px solid ${i === 0 ? AMBER : TEAL}`, borderLeft: `4px solid ${i === 0 ? AMBER : TEAL}`, borderRadius: 12, padding: "1rem 1.25rem", textAlign: "left", cursor: "pointer" }}>
+            style={{ background: "#fff", border: "0.5px solid " + (i === 0 ? AMBER : TEAL), borderLeft: "4px solid " + (i === 0 ? AMBER : TEAL), borderRadius: 12, padding: "1rem 1.25rem", textAlign: "left", cursor: "pointer" }}>
             <div style={{ fontSize: 17, fontWeight: 600, color: "#1a1a1a", marginBottom: 4 }}>{w.name}</div>
             <div style={{ fontSize: 12, color: "#888" }}>{w.warmup.length + w.main.length} exercises</div>
           </button>
@@ -231,7 +233,7 @@ function DraggableList({ items, onReorder, onRemove }) {
 
   if (view === VIEWS.HISTORY) {
     const hw = workouts[historyWorkout];
-    const hwHistory = (history[`w${historyWorkout}`] || []);
+    const hwHistory = history["w" + historyWorkout] || [];
     return (
       <div style={{ maxWidth: 520, margin: "0 auto", padding: "1.25rem 1rem 3rem" }}>
         <button style={{ ...navBtn(false), marginBottom: "1rem", fontSize: 12 }} onClick={() => saveView(VIEWS.HOME)}>← Back</button>
@@ -247,7 +249,7 @@ function DraggableList({ items, onReorder, onRemove }) {
             {[...s.warmup, ...s.main].filter(r => r.sets || r.reps || r.weight).map((r, ri) => (
               <div key={ri} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 0", borderTop: "0.5px solid #f0f0ee" }}>
                 <span style={{ fontWeight: 500 }}>{r.name}</span>
-                <span style={{ color: "#555" }}>{[r.sets && `${r.sets} sets`, r.reps && `${r.reps} reps`, r.weight && r.weight].filter(Boolean).join(" · ")}</span>
+                <span style={{ color: "#555" }}>{[r.sets && r.sets + " sets", r.reps && r.reps + " reps", r.weight].filter(Boolean).join(" · ")}</span>
               </div>
             ))}
             {s.sessionNotes && <div style={{ fontSize: 12, color: "#888", marginTop: 8, borderTop: "0.5px solid #f0f0ee", paddingTop: 8 }}>{s.sessionNotes}</div>}
@@ -258,15 +260,15 @@ function DraggableList({ items, onReorder, onRemove }) {
           <div style={{ marginTop: "1.5rem" }}>
             <p style={{ fontSize: 13, fontWeight: 600, marginBottom: "1rem", color: "#1a1a1a" }}>Exercise progress</p>
             {hw.main.map((exName, ei) => {
-              const entries = hwHistory.map(s => ({ date: s.dateLabel.slice(0,6), ex: s.main.find(r => r.name === exName) })).filter(e => e.ex && (e.ex.sets || e.ex.reps || e.ex.weight));
+              const entries = hwHistory.map(s => ({ date: s.dateLabel.slice(0, 6), ex: s.main.find(r => r.name === exName) })).filter(e => e.ex && (e.ex.sets || e.ex.reps || e.ex.weight));
               if (!entries.length) return null;
               return (
-                <div key={ei} style={{ background: "#fff", border: "0.5px solid #ddd", borderLeft: `3px solid ${TEAL}`, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
+                <div key={ei} style={{ background: "#fff", border: "0.5px solid #ddd", borderLeft: "3px solid " + TEAL, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{exName}</div>
                   {entries.slice(0, 6).map((e, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", borderTop: i > 0 ? "0.5px solid #f0f0ee" : "none" }}>
                       <span style={{ color: "#888" }}>{e.date}</span>
-                      <span style={{ color: "#555" }}>{[e.ex.sets && `${e.ex.sets}×${e.ex.reps || "?"}`, e.ex.weight].filter(Boolean).join(" @ ")}</span>
+                      <span style={{ color: "#555" }}>{[e.ex.sets && e.ex.sets + "×" + (e.ex.reps || "?"), e.ex.weight].filter(Boolean).join(" @ ")}</span>
                     </div>
                   ))}
                 </div>
@@ -281,7 +283,6 @@ function DraggableList({ items, onReorder, onRemove }) {
   return (
     <div style={{ maxWidth: 520, margin: "0 auto", padding: "1.25rem 1rem 3rem" }}>
       <button style={{ ...navBtn(false), marginBottom: "1rem", fontSize: 12 }} onClick={() => saveView(VIEWS.HOME)}>← All workouts</button>
-
       {editingName
         ? <input style={{ fontSize: 18, fontWeight: 700, width: "100%", marginBottom: "0.25rem" }} value={workout.name} onChange={e => updateWorkout("name", e.target.value)} onBlur={() => setEditingName(false)} autoFocus />
         : <p style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px", cursor: "pointer" }} onClick={() => setEditingName(true)}>{workout.name} <span style={{ fontSize: 13, color: "#aaa", fontWeight: 400 }}>tap to rename</span></p>
@@ -296,7 +297,7 @@ function DraggableList({ items, onReorder, onRemove }) {
 
       {view === VIEWS.SETUP && (
         <div>
-          {["warmup","main"].map(group => {
+          {["warmup", "main"].map(group => {
             const color = group === "warmup" ? AMBER : TEAL;
             const label = group === "warmup" ? "Warm-up exercises" : "Main exercises";
             return (
@@ -306,9 +307,9 @@ function DraggableList({ items, onReorder, onRemove }) {
                   <label style={{ fontSize: 12, color: "#666", marginBottom: 4, display: "block" }}>Target sets / reps</label>
                   <input style={{ width: "100%" }} placeholder="e.g. 3 sets × 12 reps" value={group === "warmup" ? workout.warmupTarget : workout.mainTarget} onChange={e => updateWorkout(group === "warmup" ? "warmupTarget" : "mainTarget", e.target.value)} />
                 </div>
-                <DraggableList items={workout[group]} onReorder={reordered => reorderEx(group, reordered)} onRemove={i => removeEx(group, i)} />
+                <ReorderList items={workout[group]} onReorder={r => reorderEx(group, r)} onRemove={i => removeEx(group, i)} />
                 <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                  <input style={{ flex: 1 }} placeholder={`Add ${group === "warmup" ? "warm-up" : "main"} exercise`} value={newEx[group]} onChange={e => setNewEx(p => ({ ...p, [group]: e.target.value }))} onKeyDown={e => e.key === "Enter" && addEx(group)} />
+                  <input style={{ flex: 1 }} placeholder={"Add " + (group === "warmup" ? "warm-up" : "main") + " exercise"} value={newEx[group]} onChange={e => setNewEx(p => ({ ...p, [group]: e.target.value }))} onKeyDown={e => e.key === "Enter" && addEx(group)} />
                   <button style={{ background: "transparent", border: "0.5px solid #ccc", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", color: "#1a1a1a" }} onClick={() => addEx(group)}>Add</button>
                 </div>
               </div>
@@ -323,7 +324,7 @@ function DraggableList({ items, onReorder, onRemove }) {
       {view === VIEWS.LOG && (
         <div>
           <SectionBanner color={AMBER} label="Warm-up" />
-          <div style={{ background: "#fff", border: `0.5px solid ${AMBER}33`, borderLeft: `3px solid ${AMBER}`, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
+          <div style={{ background: "#fff", border: "0.5px solid " + AMBER + "33", borderLeft: "3px solid " + AMBER, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
             <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 10 }}>2–4 min cardio</div>
             <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>What did you do?</label>
             <input style={{ width: "100%" }} placeholder="e.g. rowing machine, skipping, bike..." value={log.cardio} onChange={e => saveLog({ ...log, cardio: e.target.value })} />
@@ -339,8 +340,8 @@ function DraggableList({ items, onReorder, onRemove }) {
           {log.main.map((row, i) => <ExCard key={i} row={row} onUpdate={(f, v) => updateLogRow("main", i, f, v)} accent={TEAL} />)}
 
           <div onClick={() => saveLog({ ...log, cooldown: !log.cooldown })}
-            style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginTop: 16, borderRadius: 12, background: log.cooldown ? TEAL + "18" : "#f0f0ee", border: `0.5px solid ${log.cooldown ? TEAL : "#ccc"}`, cursor: "pointer" }}>
-            <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${log.cooldown ? TEAL : "#bbb"}`, background: log.cooldown ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginTop: 16, borderRadius: 12, background: log.cooldown ? TEAL + "18" : "#f0f0ee", border: "0.5px solid " + (log.cooldown ? TEAL : "#ccc"), cursor: "pointer" }}>
+            <div style={{ width: 22, height: 22, borderRadius: 6, border: "2px solid " + (log.cooldown ? TEAL : "#bbb"), background: log.cooldown ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               {log.cooldown && <svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
             </div>
             <span style={{ fontSize: 14, fontWeight: 500, color: log.cooldown ? TEAL : "#1a1a1a" }}>Cooldown completed</span>
