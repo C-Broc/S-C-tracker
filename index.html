@@ -4,26 +4,49 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Strength and Conditioning Tracker</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
-  input, textarea { font-family: inherit; font-size: 15px; background: #fff; border: 0.5px solid #ccc; border-radius: 8px; padding: 8px 10px; color: #1a1a1a; outline: none; }
-  input:focus, textarea:focus { border-color: #888; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
-  button { font-family: inherit; font-size: 14px; cursor: pointer; }
-  * { -webkit-tap-highlight-color: transparent; }
+  input, textarea, button, select { font-family: inherit; font-size: 15px; }
+  input, textarea { background: #fff; border: 0.5px solid #ccc; border-radius: 8px; padding: 8px 10px; color: #1a1a1a; outline: none; width: 100%; }
+  input:focus, textarea:focus { border-color: #888; }
+  button { cursor: pointer; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+  .card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+  .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; display: block; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .btn-nav { background: transparent; border: 0.5px solid #ccc; border-radius: 8px; padding: 7px 16px; font-size: 13px; color: #1a1a1a; }
+  .btn-nav.active { background: #e8e8e5; font-weight: 600; }
+  .btn-primary { background: #0F6E56; border: none; border-radius: 8px; padding: 13px 20px; font-size: 15px; color: #fff; font-weight: 600; width: 100%; }
+  .btn-secondary { background: transparent; border: 0.5px solid #ccc; border-radius: 8px; padding: 11px 20px; font-size: 13px; color: #666; width: 100%; }
+  .btn-add { background: transparent; border: 0.5px solid #ccc; border-radius: 8px; padding: 8px 14px; font-size: 13px; color: #1a1a1a; white-space: nowrap; }
+  .section-banner { display: flex; align-items: center; gap: 10px; margin: 1.5rem 0 1rem; }
+  .section-bar { width: 4px; height: 20px; border-radius: 2px; }
+  .section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
+  .target-banner { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+  .divider { border: none; border-top: 2px solid #ddd; margin: 1.75rem 0; }
+  .cooldown-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; margin-top: 16px; border-radius: 12px; cursor: pointer; border: 0.5px solid #ccc; background: #f0f0ee; }
+  .reorder-row { display: flex; align-items: center; gap: 8px; background: #fff; border: 0.5px solid #ddd; border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; }
+  .arrow-btn { background: transparent; border: none; font-size: 13px; padding: 0; line-height: 1; color: #888; }
+  .arrow-btn:disabled { color: #ddd; }
+  .remove-btn { background: transparent; border: none; font-size: 18px; color: #aaa; padding: 0 2px; line-height: 1; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .history-card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 12px; }
+  .history-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-top: 0.5px solid #f0f0ee; }
+  .progress-card { background: #fff; border: 0.5px solid #ddd; border-left: 3px solid #0F6E56; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+  .pill-btn { border-radius: 20px; padding: 8px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .home-workout-btn { background: #fff; border-radius: 12px; padding: 1rem 1.25rem; text-align: left; cursor: pointer; display: block; width: 100%; margin-bottom: 12px; }
 </style>
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
-const { useState, useCallback } = React;
-
+<script>
 const AMBER = "#BA7517";
 const TEAL = "#0F6E56";
 const VIEWS = { HOME: "home", SETUP: "setup", LOG: "log", EXPORT: "export", HISTORY: "history" };
+
+const load = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch { return fallback; } };
+const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
 
 const defaultWorkout = (name) => ({ name, warmup: [], main: [], warmupTarget: "", mainTarget: "" });
 const emptyLog = (w) => ({
@@ -32,344 +55,350 @@ const emptyLog = (w) => ({
   main: w.main.map(n => ({ name: n, sets: "", reps: "", weight: "", notes: "" }))
 });
 
-const load = (key, fallback) => {
-  try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch { return fallback; }
+let state = {
+  workouts: load("sc_workouts", [defaultWorkout("Workout A"), defaultWorkout("Workout B")]),
+  activeIdx: load("sc_activeIdx", 0),
+  logs: load("sc_logs", {}),
+  history: load("sc_history", {}),
+  view: load("sc_view", VIEWS.HOME),
+  newEx: { warmup: "", main: "" },
+  exportText: "",
+  copied: false,
+  editingName: false,
+  historyWorkout: 0
 };
-const save = (key, val) => {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
-};
 
-function SectionBanner({ color, label }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "1.5rem 0 1rem" }}>
-      <div style={{ width: 4, height: 20, borderRadius: 2, background: color }} />
-      <span style={{ fontSize: 12, fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</span>
-    </div>
+function setState(updates) {
+  state = { ...state, ...updates };
+  render();
+}
+
+function saveView(v) { setState({ view: v }); save("sc_view", v); }
+function saveWorkouts(w) { setState({ workouts: w }); save("sc_workouts", w); }
+function saveLogs(l) { setState({ logs: l }); save("sc_logs", l); }
+
+function getLog() {
+  const key = "w" + state.activeIdx;
+  return state.logs[key] || emptyLog(state.workouts[state.activeIdx]);
+}
+function saveLog(newLog) {
+  const key = "w" + state.activeIdx;
+  const updated = { ...state.logs, [key]: newLog };
+  saveLogs(updated);
+}
+
+function el(tag, attrs, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === "style" && typeof v === "object") Object.assign(e.style, v);
+    else if (k === "disabled") { if (v) e.disabled = true; }
+    else e.setAttribute(k, v);
+  }
+  for (const c of children.flat()) {
+    if (c == null) continue;
+    e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return e;
+}
+
+function sectionBanner(label, color) {
+  return el("div", { class: "section-banner" },
+    el("div", { class: "section-bar", style: { background: color } }),
+    el("span", { class: "section-label", style: { color } }, label)
   );
 }
 
-function TargetBanner({ text, color }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, background: color + "18", border: "0.5px solid " + color + "44", borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>
-      <span style={{ fontSize: 11, fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.05em" }}>Target</span>
-      <span style={{ fontSize: 13, color: "#1a1a1a" }}>{text}</span>
-    </div>
+function targetBanner(text, color) {
+  return el("div", { class: "target-banner", style: { background: color + "18", border: "0.5px solid " + color + "44" } },
+    el("span", { style: { fontSize: "11px", fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.05em" } }, "Target"),
+    el("span", { style: { fontSize: "13px" } }, text)
   );
 }
 
-function ExCard({ row, onUpdate, accent }) {
-  return (
-    <div style={{ background: "#fff", border: "0.5px solid " + accent + "33", borderLeft: "3px solid " + accent, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
-      <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 12 }}>{row.name}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-        <div>
-          <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Sets</label>
-          <input style={{ width: "100%" }} type="number" min="0" value={row.sets} onChange={e => onUpdate("sets", e.target.value)} />
-        </div>
-        <div>
-          <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Reps</label>
-          <input style={{ width: "100%" }} type="number" min="0" value={row.reps} onChange={e => onUpdate("reps", e.target.value)} />
-        </div>
-      </div>
-      <div style={{ marginBottom: 8 }}>
-        <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Weight</label>
-        <input style={{ width: "100%" }} placeholder="kg / lb" value={row.weight} onChange={e => onUpdate("weight", e.target.value)} />
-      </div>
-      <div>
-        <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>Notes</label>
-        <input style={{ width: "100%" }} placeholder="Any notes..." value={row.notes} onChange={e => onUpdate("notes", e.target.value)} />
-      </div>
-    </div>
-  );
-}
-
-function ReorderList({ items, onReorder, onRemove }) {
-  const move = (i, dir) => {
-    const to = i + dir;
-    if (to < 0 || to >= items.length) return;
-    const r = [...items];
-    const tmp = r[i]; r[i] = r[to]; r[to] = tmp;
-    onReorder(r);
-  };
-  return (
-    <div style={{ marginBottom: 12 }}>
-      {items.map((ex, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "0.5px solid #ddd", borderRadius: 8, padding: "10px 12px", marginBottom: 6 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <button onClick={() => move(i, -1)} style={{ background: "transparent", border: "none", cursor: "pointer", color: i === 0 ? "#ddd" : "#888", fontSize: 13, lineHeight: 1, padding: 0 }}>▲</button>
-            <button onClick={() => move(i, 1)} style={{ background: "transparent", border: "none", cursor: "pointer", color: i === items.length - 1 ? "#ddd" : "#888", fontSize: 13, lineHeight: 1, padding: 0 }}>▼</button>
-          </div>
-          <span style={{ flex: 1, fontSize: 14, color: "#1a1a1a" }}>{ex}</span>
-          <button onClick={() => onRemove(i)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "#aaa", fontSize: 18, lineHeight: 1, padding: "0 2px" }}>×</button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function App() {
-  const [workouts, setWorkouts] = useState(() => load("sc_workouts", [defaultWorkout("Workout A"), defaultWorkout("Workout B")]));
-  const [activeIdx, setActiveIdx] = useState(() => load("sc_activeIdx", 0));
-  const [logs, setLogs] = useState(() => load("sc_logs", {}));
-  const [history, setHistory] = useState(() => load("sc_history", {}));
-  const [view, setView] = useState(() => load("sc_view", VIEWS.HOME));
-  const [newEx, setNewEx] = useState({ warmup: "", main: "" });
-  const [exportText, setExportText] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [editingName, setEditingName] = useState(false);
-  const [historyWorkout, setHistoryWorkout] = useState(0);
-
-  const workout = workouts[activeIdx] || workouts[0];
-  const logKey = "w" + activeIdx;
-  const log = logs[logKey] || emptyLog(workout);
-
-  const saveView = (v) => { setView(v); save("sc_view", v); };
-
-  const saveWorkouts = (w) => { setWorkouts(w); save("sc_workouts", w); };
-
-  const saveLog = useCallback((newLog) => {
-    setLogs(prev => { const u = { ...prev, [logKey]: newLog }; save("sc_logs", u); return u; });
-  }, [logKey]);
-
-  const updateLogRow = useCallback((group, i, field, val) => {
-    setLogs(prev => {
-      const cur = prev[logKey] || emptyLog(workout);
-      const rows = [...cur[group]];
-      rows[i] = { ...rows[i], [field]: val };
-      const u = { ...prev, [logKey]: { ...cur, [group]: rows } };
-      save("sc_logs", u);
-      return u;
-    });
-  }, [logKey, workout]);
-
-  const updateWorkout = (field, val) => {
-    saveWorkouts(workouts.map((w, i) => i === activeIdx ? { ...w, [field]: val } : w));
-  };
-
-  const reorderEx = (group, reordered) => {
-    saveWorkouts(workouts.map((w, i) => i === activeIdx ? { ...w, [group]: reordered } : w));
-  };
-
-  const addEx = (group) => {
-    const val = newEx[group].trim();
-    if (!val) return;
-    saveWorkouts(workouts.map((w, i) => i === activeIdx ? { ...w, [group]: [...w[group], val] } : w));
-    setNewEx(p => ({ ...p, [group]: "" }));
-  };
-
-  const removeEx = (group, i) => {
-    saveWorkouts(workouts.map((w, idx) => idx === activeIdx ? { ...w, [group]: w[group].filter((_, j) => j !== i) } : w));
-  };
-
-  const buildExport = () => {
-    const date = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    let txt = workout.name.toUpperCase() + " — " + date + "\n" + "=".repeat(40) + "\n\n";
-    const section = (label, rows, cardio) => {
-      txt += label.toUpperCase() + "\n" + "-".repeat(24) + "\n";
-      if (cardio) txt += "Cardio: " + cardio + "\n\n";
-      rows.forEach(r => {
-        txt += r.name + "\n";
-        const parts = [];
-        if (r.sets) parts.push("Sets: " + r.sets);
-        if (r.reps) parts.push("Reps: " + r.reps);
-        if (r.weight) parts.push("Weight: " + r.weight);
-        if (parts.length) txt += "  " + parts.join(" | ") + "\n";
-        if (r.notes) txt += "  Notes: " + r.notes + "\n";
-        txt += "\n";
-      });
-    };
-    if (log.warmup.length || log.cardio) section("Warm-up", log.warmup, log.cardio);
-    if (log.main.length) section("Main exercises", log.main, "");
-    txt += "Cooldown completed: " + (log.cooldown ? "Yes" : "No") + "\n";
-    if (log.sessionNotes) txt += "\nSession notes: " + log.sessionNotes + "\n";
-
-    const sessionRecord = { date: new Date().toISOString(), dateLabel: date, workoutName: workout.name, cardio: log.cardio, cooldown: log.cooldown, sessionNotes: log.sessionNotes, warmup: log.warmup, main: log.main };
-    setHistory(prev => {
-      const u = { ...prev, [logKey]: [sessionRecord, ...(prev[logKey] || [])] };
-      save("sc_history", u);
-      return u;
-    });
-    setExportText(txt);
-    saveView(VIEWS.EXPORT);
-  };
-
-  const copy = () => {
-    navigator.clipboard.writeText(exportText).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
-  };
-
-  const exportAllData = () => {
-    const blob = new Blob([JSON.stringify({ workouts, history }, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "sc-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
-    a.click();
-  };
-
-  const navBtn = (active) => ({ background: active ? "#e8e8e5" : "transparent", border: "0.5px solid #ccc", borderRadius: 8, padding: "7px 16px", fontSize: 13, cursor: "pointer", color: "#1a1a1a", fontWeight: active ? 600 : 400 });
-  const pill = (color, active) => ({ background: active ? color : "transparent", border: "1.5px solid " + color, borderRadius: 20, padding: "8px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", color: active ? "#fff" : color });
-
-  if (view === VIEWS.HOME) return (
-    <div style={{ maxWidth: 520, margin: "0 auto", padding: "2rem 1rem" }}>
-      <p style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px" }}>Strength and Conditioning</p>
-      <p style={{ fontSize: 13, color: "#666", margin: "0 0 2rem" }}>Choose a workout to begin.</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: "2rem" }}>
-        {workouts.map((w, i) => (
-          <button key={i} onClick={() => { setActiveIdx(i); save("sc_activeIdx", i); saveView(VIEWS.LOG); }}
-            style={{ background: "#fff", border: "0.5px solid " + (i === 0 ? AMBER : TEAL), borderLeft: "4px solid " + (i === 0 ? AMBER : TEAL), borderRadius: 12, padding: "1rem 1.25rem", textAlign: "left", cursor: "pointer" }}>
-            <div style={{ fontSize: 17, fontWeight: 600, color: "#1a1a1a", marginBottom: 4 }}>{w.name}</div>
-            <div style={{ fontSize: 12, color: "#888" }}>{w.warmup.length + w.main.length} exercises</div>
-          </button>
-        ))}
-      </div>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {workouts.map((w, i) => (
-          <button key={i} style={{ ...navBtn(false), fontSize: 12 }} onClick={() => { setActiveIdx(i); save("sc_activeIdx", i); saveView(VIEWS.SETUP); }}>Edit {w.name}</button>
-        ))}
-        <button style={{ ...navBtn(false), fontSize: 12 }} onClick={() => { setHistoryWorkout(0); saveView(VIEWS.HISTORY); }}>View history</button>
-        <button style={{ ...navBtn(false), fontSize: 12 }} onClick={exportAllData}>Export all data</button>
-      </div>
-    </div>
-  );
-
-  if (view === VIEWS.HISTORY) {
-    const hw = workouts[historyWorkout];
-    const hwHistory = history["w" + historyWorkout] || [];
-    return (
-      <div style={{ maxWidth: 520, margin: "0 auto", padding: "1.25rem 1rem 3rem" }}>
-        <button style={{ ...navBtn(false), marginBottom: "1rem", fontSize: 12 }} onClick={() => saveView(VIEWS.HOME)}>← Back</button>
-        <p style={{ fontSize: 20, fontWeight: 700, margin: "0 0 1rem" }}>Session history</p>
-        <div style={{ display: "flex", gap: 8, marginBottom: "1.5rem" }}>
-          {workouts.map((w, i) => <button key={i} style={pill(i === 0 ? AMBER : TEAL, historyWorkout === i)} onClick={() => setHistoryWorkout(i)}>{w.name}</button>)}
-        </div>
-        {hwHistory.length === 0 && <p style={{ color: "#888", fontSize: 14 }}>No sessions logged yet for {hw.name}.</p>}
-        {hwHistory.map((s, si) => (
-          <div key={si} style={{ background: "#fff", border: "0.5px solid #ddd", borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10, color: "#1a1a1a" }}>{s.dateLabel}</div>
-            {s.cardio && <div style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>Cardio: {s.cardio}</div>}
-            {[...s.warmup, ...s.main].filter(r => r.sets || r.reps || r.weight).map((r, ri) => (
-              <div key={ri} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 0", borderTop: "0.5px solid #f0f0ee" }}>
-                <span style={{ fontWeight: 500 }}>{r.name}</span>
-                <span style={{ color: "#555" }}>{[r.sets && r.sets + " sets", r.reps && r.reps + " reps", r.weight].filter(Boolean).join(" · ")}</span>
-              </div>
-            ))}
-            {s.sessionNotes && <div style={{ fontSize: 12, color: "#888", marginTop: 8, borderTop: "0.5px solid #f0f0ee", paddingTop: 8 }}>{s.sessionNotes}</div>}
-            <div style={{ fontSize: 12, color: s.cooldown ? TEAL : "#aaa", marginTop: 8 }}>{s.cooldown ? "✓ Cooldown done" : "Cooldown not logged"}</div>
-          </div>
-        ))}
-        {hwHistory.length > 0 && (
-          <div style={{ marginTop: "1.5rem" }}>
-            <p style={{ fontSize: 13, fontWeight: 600, marginBottom: "1rem", color: "#1a1a1a" }}>Exercise progress</p>
-            {hw.main.map((exName, ei) => {
-              const entries = hwHistory.map(s => ({ date: s.dateLabel.slice(0, 6), ex: s.main.find(r => r.name === exName) })).filter(e => e.ex && (e.ex.sets || e.ex.reps || e.ex.weight));
-              if (!entries.length) return null;
-              return (
-                <div key={ei} style={{ background: "#fff", border: "0.5px solid #ddd", borderLeft: "3px solid " + TEAL, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>{exName}</div>
-                  {entries.slice(0, 6).map((e, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", borderTop: i > 0 ? "0.5px solid #f0f0ee" : "none" }}>
-                      <span style={{ color: "#888" }}>{e.date}</span>
-                      <span style={{ color: "#555" }}>{[e.ex.sets && e.ex.sets + "×" + (e.ex.reps || "?"), e.ex.weight].filter(Boolean).join(" @ ")}</span>
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+function reorderList(items, group) {
+  const container = el("div", {});
+  items.forEach((ex, i) => {
+    const row = el("div", { class: "reorder-row" },
+      el("div", { style: { display: "flex", flexDirection: "column", gap: "2px" } },
+        el("button", { class: "arrow-btn", disabled: i === 0, onClick: () => {
+          const w = state.workouts[state.activeIdx];
+          const arr = [...w[group]];
+          [arr[i], arr[i-1]] = [arr[i-1], arr[i]];
+          saveWorkouts(state.workouts.map((wo, idx) => idx === state.activeIdx ? { ...wo, [group]: arr } : wo));
+        }}, "▲"),
+        el("button", { class: "arrow-btn", disabled: i === items.length - 1, onClick: () => {
+          const w = state.workouts[state.activeIdx];
+          const arr = [...w[group]];
+          [arr[i], arr[i+1]] = [arr[i+1], arr[i]];
+          saveWorkouts(state.workouts.map((wo, idx) => idx === state.activeIdx ? { ...wo, [group]: arr } : wo));
+        }}, "▼")
+      ),
+      el("span", { style: { flex: 1, fontSize: "14px" } }, ex),
+      el("button", { class: "remove-btn", onClick: () => {
+        saveWorkouts(state.workouts.map((wo, idx) => idx === state.activeIdx ? { ...wo, [group]: wo[group].filter((_, j) => j !== i) } : wo));
+      }}, "×")
     );
+    container.appendChild(row);
+  });
+  return container;
+}
+
+function exCard(row, group, i, accent) {
+  const card = el("div", { class: "card", style: { borderLeft: "3px solid " + accent, border: "0.5px solid " + accent + "33", borderLeftWidth: "3px", borderLeftStyle: "solid", borderLeftColor: accent } });
+  card.style.borderLeft = "3px solid " + accent;
+  card.appendChild(el("div", { style: { fontSize: "16px", fontWeight: 600, marginBottom: "12px" } }, row.name));
+  const grid = el("div", { class: "grid2" });
+  [["Sets","sets","number"],["Reps","reps","number"]].forEach(([lbl, field, type]) => {
+    const inp = el("input", { type, min: "0", value: row[field], onInput: (e) => {
+      const log = getLog();
+      const rows = [...log[group]];
+      rows[i] = { ...rows[i], [field]: e.target.value };
+      saveLog({ ...log, [group]: rows });
+    }});
+    grid.appendChild(el("div", {}, el("label", { class: "label" }, lbl), inp));
+  });
+  card.appendChild(grid);
+  const wInp = el("input", { placeholder: "kg / lb", value: row.weight, onInput: (e) => {
+    const log = getLog();
+    const rows = [...log[group]];
+    rows[i] = { ...rows[i], weight: e.target.value };
+    saveLog({ ...log, [group]: rows });
+  }});
+  card.appendChild(el("div", { style: { marginBottom: "8px" } }, el("label", { class: "label" }, "Weight"), wInp));
+  const nInp = el("input", { placeholder: "Any notes...", value: row.notes, onInput: (e) => {
+    const log = getLog();
+    const rows = [...log[group]];
+    rows[i] = { ...rows[i], notes: e.target.value };
+    saveLog({ ...log, [group]: rows });
+  }});
+  card.appendChild(el("div", {}, el("label", { class: "label" }, "Notes"), nInp));
+  return card;
+}
+
+function renderHome() {
+  const wrap = el("div", { class: "wrap" });
+  wrap.appendChild(el("p", { style: { fontSize: "20px", fontWeight: 700, marginBottom: "4px" } }, "Strength and Conditioning"));
+  wrap.appendChild(el("p", { style: { fontSize: "13px", color: "#666", marginBottom: "2rem" } }, "Choose a workout to begin."));
+  const list = el("div", { style: { marginBottom: "2rem" } });
+  state.workouts.forEach((w, i) => {
+    const color = i === 0 ? AMBER : TEAL;
+    const btn = el("button", { class: "home-workout-btn", style: { border: "0.5px solid " + color, borderLeft: "4px solid " + color }, onClick: () => { setState({ activeIdx: i }); save("sc_activeIdx", i); saveView(VIEWS.LOG); } });
+    btn.appendChild(el("div", { style: { fontSize: "17px", fontWeight: 600, marginBottom: "4px" } }, w.name));
+    btn.appendChild(el("div", { style: { fontSize: "12px", color: "#888" } }, (w.warmup.length + w.main.length) + " exercises"));
+    list.appendChild(btn);
+  });
+  wrap.appendChild(list);
+  const actions = el("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" } });
+  state.workouts.forEach((w, i) => {
+    actions.appendChild(el("button", { class: "btn-nav", onClick: () => { setState({ activeIdx: i }); save("sc_activeIdx", i); saveView(VIEWS.SETUP); } }, "Edit " + w.name));
+  });
+  actions.appendChild(el("button", { class: "btn-nav", onClick: () => { setState({ historyWorkout: 0 }); saveView(VIEWS.HISTORY); } }, "View history"));
+  actions.appendChild(el("button", { class: "btn-nav", onClick: exportAll }, "Export all data"));
+  wrap.appendChild(actions);
+  return wrap;
+}
+
+function renderHistory() {
+  const wrap = el("div", { class: "wrap" });
+  wrap.appendChild(el("button", { class: "btn-nav", style: { marginBottom: "1rem", fontSize: "12px" }, onClick: () => saveView(VIEWS.HOME) }, "← Back"));
+  wrap.appendChild(el("p", { style: { fontSize: "20px", fontWeight: 700, marginBottom: "1rem" } }, "Session history"));
+  const tabs = el("div", { style: { display: "flex", gap: "8px", marginBottom: "1.5rem" } });
+  state.workouts.forEach((w, i) => {
+    const color = i === 0 ? AMBER : TEAL;
+    const active = state.historyWorkout === i;
+    const btn = el("button", { class: "pill-btn", style: { background: active ? color : "transparent", border: "1.5px solid " + color, color: active ? "#fff" : color }, onClick: () => setState({ historyWorkout: i }) }, w.name);
+    tabs.appendChild(btn);
+  });
+  wrap.appendChild(tabs);
+  const hw = state.workouts[state.historyWorkout];
+  const hwHistory = state.history["w" + state.historyWorkout] || [];
+  if (!hwHistory.length) {
+    wrap.appendChild(el("p", { style: { color: "#888", fontSize: "14px" } }, "No sessions logged yet for " + hw.name + "."));
+  }
+  hwHistory.forEach(s => {
+    const card = el("div", { class: "history-card" });
+    card.appendChild(el("div", { style: { fontSize: "14px", fontWeight: 600, marginBottom: "10px" } }, s.dateLabel));
+    if (s.cardio) card.appendChild(el("div", { style: { fontSize: "13px", color: "#666", marginBottom: "8px" } }, "Cardio: " + s.cardio));
+    [...s.warmup, ...s.main].filter(r => r.sets || r.reps || r.weight).forEach(r => {
+      const parts = [r.sets && r.sets + " sets", r.reps && r.reps + " reps", r.weight].filter(Boolean).join(" · ");
+      const row = el("div", { class: "history-row" }, el("span", { style: { fontWeight: 500 } }, r.name), el("span", { style: { color: "#555" } }, parts));
+      card.appendChild(row);
+    });
+    if (s.sessionNotes) card.appendChild(el("div", { style: { fontSize: "12px", color: "#888", marginTop: "8px", borderTop: "0.5px solid #f0f0ee", paddingTop: "8px" } }, s.sessionNotes));
+    card.appendChild(el("div", { style: { fontSize: "12px", color: s.cooldown ? TEAL : "#aaa", marginTop: "8px" } }, s.cooldown ? "✓ Cooldown done" : "Cooldown not logged"));
+    wrap.appendChild(card);
+  });
+  if (hwHistory.length > 0) {
+    wrap.appendChild(el("p", { style: { fontSize: "13px", fontWeight: 600, margin: "1.5rem 0 1rem" } }, "Exercise progress"));
+    hw.main.forEach(exName => {
+      const entries = hwHistory.map(s => ({ date: s.dateLabel.slice(0,6), ex: s.main.find(r => r.name === exName) })).filter(e => e.ex && (e.ex.sets || e.ex.reps || e.ex.weight));
+      if (!entries.length) return;
+      const pc = el("div", { class: "progress-card" });
+      pc.appendChild(el("div", { style: { fontSize: "14px", fontWeight: 600, marginBottom: "8px" } }, exName));
+      entries.slice(0, 6).forEach((e, i) => {
+        const val = [e.ex.sets && e.ex.sets + "×" + (e.ex.reps || "?"), e.ex.weight].filter(Boolean).join(" @ ");
+        pc.appendChild(el("div", { style: { display: "flex", justifyContent: "space-between", fontSize: "12px", padding: "4px 0", borderTop: i > 0 ? "0.5px solid #f0f0ee" : "none" } },
+          el("span", { style: { color: "#888" } }, e.date),
+          el("span", { style: { color: "#555" } }, val)
+        ));
+      });
+      wrap.appendChild(pc);
+    });
+  }
+  return wrap;
+}
+
+function renderWorkout() {
+  const workout = state.workouts[state.activeIdx];
+  const log = getLog();
+  const wrap = el("div", { class: "wrap" });
+  wrap.appendChild(el("button", { class: "btn-nav", style: { marginBottom: "1rem", fontSize: "12px" }, onClick: () => saveView(VIEWS.HOME) }, "← All workouts"));
+
+  if (state.editingName) {
+    const inp = el("input", { value: workout.name, style: { fontSize: "18px", fontWeight: 700, marginBottom: "0.25rem" }, onInput: (e) => {
+      saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, name: e.target.value } : w));
+    }});
+    inp.addEventListener("blur", () => setState({ editingName: false }));
+    wrap.appendChild(inp);
+    setTimeout(() => inp.focus(), 0);
+  } else {
+    const nameRow = el("p", { style: { fontSize: "20px", fontWeight: 700, marginBottom: "4px", cursor: "pointer" } }, workout.name, " ", el("span", { style: { fontSize: "13px", color: "#aaa", fontWeight: 400 } }, "tap to rename"));
+    nameRow.addEventListener("click", () => setState({ editingName: true }));
+    wrap.appendChild(nameRow);
+  }
+  wrap.appendChild(el("p", { style: { fontSize: "13px", color: "#666", marginBottom: "1.5rem" } }, "Log your session and export for your coach."));
+
+  const nav = el("div", { style: { display: "flex", gap: "8px", marginBottom: "1.5rem", flexWrap: "wrap" } });
+  [["Setup", VIEWS.SETUP], ["Log workout", VIEWS.LOG]].forEach(([label, v]) => {
+    nav.appendChild(el("button", { class: "btn-nav" + (state.view === v ? " active" : ""), onClick: () => saveView(v) }, label));
+  });
+  if (state.exportText) nav.appendChild(el("button", { class: "btn-nav" + (state.view === VIEWS.EXPORT ? " active" : ""), onClick: () => saveView(VIEWS.EXPORT) }, "Export"));
+  wrap.appendChild(nav);
+
+  if (state.view === VIEWS.SETUP) {
+    ["warmup", "main"].forEach(group => {
+      const color = group === "warmup" ? AMBER : TEAL;
+      const label = group === "warmup" ? "Warm-up exercises" : "Main exercises";
+      wrap.appendChild(sectionBanner(label, color));
+      wrap.appendChild(el("div", { style: { marginBottom: "12px" } },
+        el("label", { class: "label" }, "Target sets / reps"),
+        el("input", { placeholder: "e.g. 3 sets × 12 reps", value: group === "warmup" ? workout.warmupTarget : workout.mainTarget, onInput: (e) => {
+          saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, [group === "warmup" ? "warmupTarget" : "mainTarget"]: e.target.value } : w));
+        }})
+      ));
+      wrap.appendChild(reorderList(workout[group], group));
+      const addRow = el("div", { class: "row", style: { marginBottom: "8px" } });
+      const addInp = el("input", { placeholder: "Add " + (group === "warmup" ? "warm-up" : "main") + " exercise", style: { flex: 1 } });
+      addInp.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); });
+      const doAdd = () => {
+        const val = addInp.value.trim();
+        if (!val) return;
+        saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, [group]: [...w[group], val] } : w));
+      };
+      addRow.appendChild(addInp);
+      addRow.appendChild(el("button", { class: "btn-add", onClick: doAdd }, "Add"));
+      wrap.appendChild(addRow);
+    });
+    if (workout.warmup.length + workout.main.length > 0) {
+      wrap.appendChild(el("button", { class: "btn-primary", style: { marginTop: "1.5rem" }, onClick: () => saveView(VIEWS.LOG) }, "Start logging →"));
+    }
   }
 
-  return (
-    <div style={{ maxWidth: 520, margin: "0 auto", padding: "1.25rem 1rem 3rem" }}>
-      <button style={{ ...navBtn(false), marginBottom: "1rem", fontSize: 12 }} onClick={() => saveView(VIEWS.HOME)}>← All workouts</button>
-      {editingName
-        ? <input style={{ fontSize: 18, fontWeight: 700, width: "100%", marginBottom: "0.25rem" }} value={workout.name} onChange={e => updateWorkout("name", e.target.value)} onBlur={() => setEditingName(false)} autoFocus />
-        : <p style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px", cursor: "pointer" }} onClick={() => setEditingName(true)}>{workout.name} <span style={{ fontSize: 13, color: "#aaa", fontWeight: 400 }}>tap to rename</span></p>
-      }
-      <p style={{ fontSize: 13, color: "#666", margin: "0 0 1.5rem" }}>Log your session and export for your coach.</p>
+  if (state.view === VIEWS.LOG) {
+    wrap.appendChild(sectionBanner("Warm-up", AMBER));
+    const cardioCard = el("div", { class: "card", style: { borderLeft: "3px solid " + AMBER } });
+    cardioCard.appendChild(el("div", { style: { fontSize: "16px", fontWeight: 600, marginBottom: "10px" } }, "2–4 min cardio"));
+    cardioCard.appendChild(el("label", { class: "label" }, "What did you do?"));
+    cardioCard.appendChild(el("input", { placeholder: "e.g. rowing machine, skipping, bike...", value: log.cardio, onInput: (e) => saveLog({ ...getLog(), cardio: e.target.value }) }));
+    wrap.appendChild(cardioCard);
+    if (workout.warmupTarget) wrap.appendChild(targetBanner(workout.warmupTarget, AMBER));
+    log.warmup.forEach((row, i) => wrap.appendChild(exCard(row, "warmup", i, AMBER)));
+    wrap.appendChild(el("hr", { class: "divider" }));
+    wrap.appendChild(sectionBanner("Main exercises", TEAL));
+    if (workout.mainTarget) wrap.appendChild(targetBanner(workout.mainTarget, TEAL));
+    if (!log.main.length) wrap.appendChild(el("p", { style: { color: "#888", fontSize: "14px" } }, "No main exercises set up yet."));
+    log.main.forEach((row, i) => wrap.appendChild(exCard(row, "main", i, TEAL)));
 
-      <div style={{ display: "flex", gap: 8, marginBottom: "1.5rem", flexWrap: "wrap" }}>
-        <button style={navBtn(view === VIEWS.SETUP)} onClick={() => saveView(VIEWS.SETUP)}>Setup</button>
-        <button style={navBtn(view === VIEWS.LOG)} onClick={() => saveView(VIEWS.LOG)}>Log workout</button>
-        {exportText && <button style={navBtn(view === VIEWS.EXPORT)} onClick={() => saveView(VIEWS.EXPORT)}>Export</button>}
-      </div>
+    const cdRow = el("div", { class: "cooldown-row", style: { background: log.cooldown ? TEAL + "18" : "#f0f0ee", borderColor: log.cooldown ? TEAL : "#ccc" } });
+    const cdBox = el("div", { style: { width: "22px", height: "22px", borderRadius: "6px", border: "2px solid " + (log.cooldown ? TEAL : "#bbb"), background: log.cooldown ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } });
+    if (log.cooldown) { const svg = document.createElementNS("http://www.w3.org/2000/svg","svg"); svg.setAttribute("width","12"); svg.setAttribute("height","12"); svg.setAttribute("viewBox","0 0 12 12"); const poly = document.createElementNS("http://www.w3.org/2000/svg","polyline"); poly.setAttribute("points","2,6 5,9 10,3"); poly.setAttribute("stroke","#fff"); poly.setAttribute("stroke-width","2"); poly.setAttribute("fill","none"); svg.appendChild(poly); cdBox.appendChild(svg); }
+    cdRow.appendChild(cdBox);
+    cdRow.appendChild(el("span", { style: { fontSize: "14px", fontWeight: 500, color: log.cooldown ? TEAL : "#1a1a1a" } }, "Cooldown completed"));
+    cdRow.addEventListener("click", () => saveLog({ ...getLog(), cooldown: !getLog().cooldown }));
+    wrap.appendChild(cdRow);
 
-      {view === VIEWS.SETUP && (
-        <div>
-          {["warmup", "main"].map(group => {
-            const color = group === "warmup" ? AMBER : TEAL;
-            const label = group === "warmup" ? "Warm-up exercises" : "Main exercises";
-            return (
-              <div key={group}>
-                <SectionBanner color={color} label={label} />
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 12, color: "#666", marginBottom: 4, display: "block" }}>Target sets / reps</label>
-                  <input style={{ width: "100%" }} placeholder="e.g. 3 sets × 12 reps" value={group === "warmup" ? workout.warmupTarget : workout.mainTarget} onChange={e => updateWorkout(group === "warmup" ? "warmupTarget" : "mainTarget", e.target.value)} />
-                </div>
-                <ReorderList items={workout[group]} onReorder={r => reorderEx(group, r)} onRemove={i => removeEx(group, i)} />
-                <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                  <input style={{ flex: 1 }} placeholder={"Add " + (group === "warmup" ? "warm-up" : "main") + " exercise"} value={newEx[group]} onChange={e => setNewEx(p => ({ ...p, [group]: e.target.value }))} onKeyDown={e => e.key === "Enter" && addEx(group)} />
-                  <button style={{ background: "transparent", border: "0.5px solid #ccc", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", color: "#1a1a1a" }} onClick={() => addEx(group)}>Add</button>
-                </div>
-              </div>
-            );
-          })}
-          {workout.warmup.length + workout.main.length > 0 && (
-            <button style={{ background: TEAL, border: "none", borderRadius: 8, padding: "13px 20px", fontSize: 15, cursor: "pointer", color: "#fff", fontWeight: 600, width: "100%", marginTop: "1.5rem" }} onClick={() => saveView(VIEWS.LOG)}>Start logging →</button>
-          )}
-        </div>
-      )}
+    wrap.appendChild(el("div", { style: { marginTop: "16px" } },
+      el("label", { class: "label" }, "Session notes"),
+      el("textarea", { placeholder: "Anything else to note...", style: { minHeight: "80px", resize: "vertical", fontSize: "14px" }, onInput: (e) => saveLog({ ...getLog(), sessionNotes: e.target.value }) }, log.sessionNotes || "")
+    ));
+    wrap.appendChild(el("button", { class: "btn-primary", style: { marginTop: "12px" }, onClick: buildExport }, "Generate export →"));
+  }
 
-      {view === VIEWS.LOG && (
-        <div>
-          <SectionBanner color={AMBER} label="Warm-up" />
-          <div style={{ background: "#fff", border: "0.5px solid " + AMBER + "33", borderLeft: "3px solid " + AMBER, borderRadius: 12, padding: "1rem 1.25rem", marginBottom: 10 }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 10 }}>2–4 min cardio</div>
-            <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4, display: "block" }}>What did you do?</label>
-            <input style={{ width: "100%" }} placeholder="e.g. rowing machine, skipping, bike..." value={log.cardio} onChange={e => saveLog({ ...log, cardio: e.target.value })} />
-          </div>
-          {workout.warmupTarget && <TargetBanner text={workout.warmupTarget} color={AMBER} />}
-          {log.warmup.map((row, i) => <ExCard key={i} row={row} onUpdate={(f, v) => updateLogRow("warmup", i, f, v)} accent={AMBER} />)}
+  if (state.view === VIEWS.EXPORT) {
+    wrap.appendChild(el("textarea", { style: { fontFamily: "monospace", fontSize: "12px", minHeight: "260px", resize: "vertical", marginBottom: "10px" }, readOnly: true }, state.exportText));
+    wrap.appendChild(el("button", { class: "btn-primary", style: { marginBottom: "8px" }, onClick: copyExport }, state.copied ? "Copied!" : "Copy to clipboard"));
+    wrap.appendChild(el("button", { class: "btn-secondary", style: { marginBottom: "8px" }, onClick: () => { saveLog(emptyLog(state.workouts[state.activeIdx])); saveView(VIEWS.LOG); } }, "Start new session"));
+    wrap.appendChild(el("button", { class: "btn-secondary", onClick: () => saveView(VIEWS.HOME) }, "← All workouts"));
+  }
 
-          <div style={{ borderTop: "2px solid #ddd", margin: "1.75rem 0" }} />
-
-          <SectionBanner color={TEAL} label="Main exercises" />
-          {workout.mainTarget && <TargetBanner text={workout.mainTarget} color={TEAL} />}
-          {log.main.length === 0 && <p style={{ color: "#888", fontSize: 14 }}>No main exercises set up yet.</p>}
-          {log.main.map((row, i) => <ExCard key={i} row={row} onUpdate={(f, v) => updateLogRow("main", i, f, v)} accent={TEAL} />)}
-
-          <div onClick={() => saveLog({ ...log, cooldown: !log.cooldown })}
-            style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", marginTop: 16, borderRadius: 12, background: log.cooldown ? TEAL + "18" : "#f0f0ee", border: "0.5px solid " + (log.cooldown ? TEAL : "#ccc"), cursor: "pointer" }}>
-            <div style={{ width: 22, height: 22, borderRadius: 6, border: "2px solid " + (log.cooldown ? TEAL : "#bbb"), background: log.cooldown ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              {log.cooldown && <svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-            </div>
-            <span style={{ fontSize: 14, fontWeight: 500, color: log.cooldown ? TEAL : "#1a1a1a" }}>Cooldown completed</span>
-          </div>
-
-          <div style={{ marginTop: 16 }}>
-            <label style={{ fontSize: 11, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, display: "block" }}>Session notes</label>
-            <textarea style={{ width: "100%", minHeight: 80, resize: "vertical", fontSize: 14, padding: "8px 10px" }} placeholder="Anything else to note about this session..." value={log.sessionNotes || ""} onChange={e => saveLog({ ...log, sessionNotes: e.target.value })} />
-          </div>
-
-          <button style={{ background: TEAL, border: "none", borderRadius: 8, padding: "13px 20px", fontSize: 15, cursor: "pointer", color: "#fff", fontWeight: 600, width: "100%", marginTop: 12 }} onClick={buildExport}>Generate export →</button>
-        </div>
-      )}
-
-      {view === VIEWS.EXPORT && (
-        <div>
-          <textarea style={{ width: "100%", fontFamily: "monospace", fontSize: 12, minHeight: 260, resize: "vertical", marginBottom: 10 }} readOnly value={exportText} />
-          <button style={{ background: TEAL, border: "none", borderRadius: 8, padding: "13px 20px", fontSize: 15, cursor: "pointer", color: "#fff", fontWeight: 600, width: "100%", marginBottom: 8 }} onClick={copy}>{copied ? "Copied!" : "Copy to clipboard"}</button>
-          <button style={{ background: "transparent", border: "0.5px solid #ccc", borderRadius: 8, padding: "11px 20px", fontSize: 13, cursor: "pointer", color: "#666", width: "100%", marginBottom: 8 }}
-            onClick={() => { const fresh = emptyLog(workout); saveLog(fresh); saveView(VIEWS.LOG); }}>Start new session</button>
-          <button style={{ background: "transparent", border: "0.5px solid #ccc", borderRadius: 8, padding: "11px 20px", fontSize: 13, cursor: "pointer", color: "#666", width: "100%" }} onClick={() => saveView(VIEWS.HOME)}>← All workouts</button>
-        </div>
-      )}
-    </div>
-  );
+  return wrap;
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+function buildExport() {
+  const workout = state.workouts[state.activeIdx];
+  const log = getLog();
+  const date = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  let txt = workout.name.toUpperCase() + " — " + date + "\n" + "=".repeat(40) + "\n\n";
+  const section = (label, rows, cardio) => {
+    txt += label.toUpperCase() + "\n" + "-".repeat(24) + "\n";
+    if (cardio) txt += "Cardio: " + cardio + "\n\n";
+    rows.forEach(r => {
+      txt += r.name + "\n";
+      const parts = [r.sets && "Sets: " + r.sets, r.reps && "Reps: " + r.reps, r.weight && "Weight: " + r.weight].filter(Boolean);
+      if (parts.length) txt += "  " + parts.join(" | ") + "\n";
+      if (r.notes) txt += "  Notes: " + r.notes + "\n";
+      txt += "\n";
+    });
+  };
+  if (log.warmup.length || log.cardio) section("Warm-up", log.warmup, log.cardio);
+  if (log.main.length) section("Main exercises", log.main, "");
+  txt += "Cooldown completed: " + (log.cooldown ? "Yes" : "No") + "\n";
+  if (log.sessionNotes) txt += "\nSession notes: " + log.sessionNotes + "\n";
+
+  const sessionRecord = { date: new Date().toISOString(), dateLabel: date, workoutName: workout.name, cardio: log.cardio, cooldown: log.cooldown, sessionNotes: log.sessionNotes, warmup: log.warmup, main: log.main };
+  const key = "w" + state.activeIdx;
+  const newHistory = { ...state.history, [key]: [sessionRecord, ...(state.history[key] || [])] };
+  save("sc_history", newHistory);
+  setState({ exportText: txt, history: newHistory });
+  saveView(VIEWS.EXPORT);
+}
+
+function copyExport() {
+  navigator.clipboard.writeText(state.exportText).then(() => {
+    setState({ copied: true });
+    setTimeout(() => setState({ copied: false }), 2000);
+  });
+}
+
+function exportAll() {
+  const blob = new Blob([JSON.stringify({ workouts: state.workouts, history: state.history }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "sc-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+}
+
+function render() {
+  const root = document.getElementById("root");
+  root.innerHTML = "";
+  if (state.view === VIEWS.HOME) root.appendChild(renderHome());
+  else if (state.view === VIEWS.HISTORY) root.appendChild(renderHistory());
+  else root.appendChild(renderWorkout());
+}
+
+render();
 </script>
 </body>
 </html>
