@@ -329,10 +329,15 @@ function renderWorkout() {
     cdRow.addEventListener("click", () => saveLog({ ...getLog(), cooldown: !getLog().cooldown }));
     wrap.appendChild(cdRow);
 
-    wrap.appendChild(el("div", { style: { marginTop: "16px" } },
-      el("label", { class: "label" }, "Session notes"),
-      el("textarea", { placeholder: "Anything else to note...", style: { minHeight: "80px", resize: "vertical", fontSize: "14px" }, onInput: (e) => saveLog({ ...getLog(), sessionNotes: e.target.value }) }, log.sessionNotes || "")
-    ));
+    const notesArea = el("textarea", { placeholder: "Anything else to note...", style: { minHeight: "80px", resize: "vertical", fontSize: "14px" } }, log.sessionNotes || "");
+    notesArea.addEventListener("input", (e) => {
+      const current = getLog();
+      const key = "w" + state.activeIdx;
+      const updated = { ...current, sessionNotes: e.target.value };
+      state = { ...state, logs: { ...state.logs, [key]: updated } };
+      save("sc_logs", state.logs);
+    });
+    wrap.appendChild(el("div", { style: { marginTop: "16px" } }, el("label", { class: "label" }, "Session notes"), notesArea));
     wrap.appendChild(el("button", { class: "btn-primary", style: { marginTop: "12px" }, onClick: buildExport }, "Generate export →"));
   }
 
