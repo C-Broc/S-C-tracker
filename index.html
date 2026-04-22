@@ -7,7 +7,7 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
-  input, textarea, button, select { font-family: inherit; font-size: 15px; }
+  input, textarea, button { font-family: inherit; font-size: 15px; }
   input, textarea { background: #fff; border: 0.5px solid #ccc; border-radius: 8px; padding: 8px 10px; color: #1a1a1a; outline: none; width: 100%; }
   input:focus, textarea:focus { border-color: #888; }
   button { cursor: pointer; }
@@ -61,30 +61,27 @@ let state = {
   logs: load("sc_logs", {}),
   history: load("sc_history", {}),
   view: load("sc_view", VIEWS.HOME),
-  newEx: { warmup: "", main: "" },
   exportText: "",
   copied: false,
   editingName: false,
   historyWorkout: 0
 };
 
-function setState(updates) {
-  state = { ...state, ...updates };
-  render();
-}
-
+// Update state and re-render only for structural changes (not text input)
+function setState(updates) { state = { ...state, ...updates }; render(); }
 function saveView(v) { setState({ view: v }); save("sc_view", v); }
 function saveWorkouts(w) { setState({ workouts: w }); save("sc_workouts", w); }
-function saveLogs(l) { setState({ logs: l }); save("sc_logs", l); }
 
 function getLog() {
   const key = "w" + state.activeIdx;
   return state.logs[key] || emptyLog(state.workouts[state.activeIdx]);
 }
-function saveLog(newLog) {
+
+// Silent save — updates data without triggering re-render, for text inputs
+function saveLogSilent(newLog) {
   const key = "w" + state.activeIdx;
-  const updated = { ...state.logs, [key]: newLog };
-  saveLogs(updated);
+  state = { ...state, logs: { ...state.logs, [key]: newLog } };
+  save("sc_logs", state.logs);
 }
 
 function el(tag, attrs, ...children) {
@@ -120,59 +117,59 @@ function targetBanner(text, color) {
 function reorderList(items, group) {
   const container = el("div", {});
   items.forEach((ex, i) => {
-    const row = el("div", { class: "reorder-row" },
+    container.appendChild(el("div", { class: "reorder-row" },
       el("div", { style: { display: "flex", flexDirection: "column", gap: "2px" } },
         el("button", { class: "arrow-btn", disabled: i === 0, onClick: () => {
-          const w = state.workouts[state.activeIdx];
-          const arr = [...w[group]];
+          const arr = [...state.workouts[state.activeIdx][group]];
           [arr[i], arr[i-1]] = [arr[i-1], arr[i]];
-          saveWorkouts(state.workouts.map((wo, idx) => idx === state.activeIdx ? { ...wo, [group]: arr } : wo));
+          saveWorkouts(state.workouts.map((w, idx) => idx === state.activeIdx ? { ...w, [group]: arr } : w));
         }}, "▲"),
         el("button", { class: "arrow-btn", disabled: i === items.length - 1, onClick: () => {
-          const w = state.workouts[state.activeIdx];
-          const arr = [...w[group]];
+          const arr = [...state.workouts[state.activeIdx][group]];
           [arr[i], arr[i+1]] = [arr[i+1], arr[i]];
-          saveWorkouts(state.workouts.map((wo, idx) => idx === state.activeIdx ? { ...wo, [group]: arr } : wo));
+          saveWorkouts(state.workouts.map((w, idx) => idx === state.activeIdx ? { ...w, [group]: arr } : w));
         }}, "▼")
       ),
       el("span", { style: { flex: 1, fontSize: "14px" } }, ex),
       el("button", { class: "remove-btn", onClick: () => {
-        saveWorkouts(state.workouts.map((wo, idx) => idx === state.activeIdx ? { ...wo, [group]: wo[group].filter((_, j) => j !== i) } : wo));
+        saveWorkouts(state.workouts.map((w, idx) => idx === state.activeIdx ? { ...w, [group]: w[group].filter((_, j) => j !== i) } : w));
       }}, "×")
-    );
-    container.appendChild(row);
+    ));
   });
   return container;
 }
 
 function exCard(row, group, i, accent) {
-  const card = el("div", { class: "card", style: { borderLeft: "3px solid " + accent, border: "0.5px solid " + accent + "33", borderLeftWidth: "3px", borderLeftStyle: "solid", borderLeftColor: accent } });
+  const card = el("div", { class: "card" });
   card.style.borderLeft = "3px solid " + accent;
   card.appendChild(el("div", { style: { fontSize: "16px", fontWeight: 600, marginBottom: "12px" } }, row.name));
   const grid = el("div", { class: "grid2" });
   [["Sets","sets","number"],["Reps","reps","number"]].forEach(([lbl, field, type]) => {
-    const inp = el("input", { type, min: "0", value: row[field], onInput: (e) => {
+    const inp = el("input", { type, min: "0", value: row[field] });
+    inp.addEventListener("input", (e) => {
       const log = getLog();
       const rows = [...log[group]];
       rows[i] = { ...rows[i], [field]: e.target.value };
-      saveLog({ ...log, [group]: rows });
-    }});
+      saveLogSilent({ ...log, [group]: rows });
+    });
     grid.appendChild(el("div", {}, el("label", { class: "label" }, lbl), inp));
   });
   card.appendChild(grid);
-  const wInp = el("input", { placeholder: "kg / lb", value: row.weight, onInput: (e) => {
+  const wInp = el("input", { placeholder: "kg / lb", value: row.weight });
+  wInp.addEventListener("input", (e) => {
     const log = getLog();
     const rows = [...log[group]];
     rows[i] = { ...rows[i], weight: e.target.value };
-    saveLog({ ...log, [group]: rows });
-  }});
+    saveLogSilent({ ...log, [group]: rows });
+  });
   card.appendChild(el("div", { style: { marginBottom: "8px" } }, el("label", { class: "label" }, "Weight"), wInp));
-  const nInp = el("input", { placeholder: "Any notes...", value: row.notes, onInput: (e) => {
+  const nInp = el("input", { placeholder: "Any notes...", value: row.notes });
+  nInp.addEventListener("input", (e) => {
     const log = getLog();
     const rows = [...log[group]];
     rows[i] = { ...rows[i], notes: e.target.value };
-    saveLog({ ...log, [group]: rows });
-  }});
+    saveLogSilent({ ...log, [group]: rows });
+  });
   card.appendChild(el("div", {}, el("label", { class: "label" }, "Notes"), nInp));
   return card;
 }
@@ -208,23 +205,21 @@ function renderHistory() {
   state.workouts.forEach((w, i) => {
     const color = i === 0 ? AMBER : TEAL;
     const active = state.historyWorkout === i;
-    const btn = el("button", { class: "pill-btn", style: { background: active ? color : "transparent", border: "1.5px solid " + color, color: active ? "#fff" : color }, onClick: () => setState({ historyWorkout: i }) }, w.name);
-    tabs.appendChild(btn);
+    tabs.appendChild(el("button", { class: "pill-btn", style: { background: active ? color : "transparent", border: "1.5px solid " + color, color: active ? "#fff" : color }, onClick: () => setState({ historyWorkout: i }) }, w.name));
   });
   wrap.appendChild(tabs);
   const hw = state.workouts[state.historyWorkout];
   const hwHistory = state.history["w" + state.historyWorkout] || [];
-  if (!hwHistory.length) {
-    wrap.appendChild(el("p", { style: { color: "#888", fontSize: "14px" } }, "No sessions logged yet for " + hw.name + "."));
-  }
+  if (!hwHistory.length) wrap.appendChild(el("p", { style: { color: "#888", fontSize: "14px" } }, "No sessions logged yet for " + hw.name + "."));
   hwHistory.forEach(s => {
     const card = el("div", { class: "history-card" });
     card.appendChild(el("div", { style: { fontSize: "14px", fontWeight: 600, marginBottom: "10px" } }, s.dateLabel));
     if (s.cardio) card.appendChild(el("div", { style: { fontSize: "13px", color: "#666", marginBottom: "8px" } }, "Cardio: " + s.cardio));
     [...s.warmup, ...s.main].filter(r => r.sets || r.reps || r.weight).forEach(r => {
-      const parts = [r.sets && r.sets + " sets", r.reps && r.reps + " reps", r.weight].filter(Boolean).join(" · ");
-      const row = el("div", { class: "history-row" }, el("span", { style: { fontWeight: 500 } }, r.name), el("span", { style: { color: "#555" } }, parts));
-      card.appendChild(row);
+      card.appendChild(el("div", { class: "history-row" },
+        el("span", { style: { fontWeight: 500 } }, r.name),
+        el("span", { style: { color: "#555" } }, [r.sets && r.sets + " sets", r.reps && r.reps + " reps", r.weight].filter(Boolean).join(" · "))
+      ));
     });
     if (s.sessionNotes) card.appendChild(el("div", { style: { fontSize: "12px", color: "#888", marginTop: "8px", borderTop: "0.5px solid #f0f0ee", paddingTop: "8px" } }, s.sessionNotes));
     card.appendChild(el("div", { style: { fontSize: "12px", color: s.cooldown ? TEAL : "#aaa", marginTop: "8px" } }, s.cooldown ? "✓ Cooldown done" : "Cooldown not logged"));
@@ -238,10 +233,9 @@ function renderHistory() {
       const pc = el("div", { class: "progress-card" });
       pc.appendChild(el("div", { style: { fontSize: "14px", fontWeight: 600, marginBottom: "8px" } }, exName));
       entries.slice(0, 6).forEach((e, i) => {
-        const val = [e.ex.sets && e.ex.sets + "×" + (e.ex.reps || "?"), e.ex.weight].filter(Boolean).join(" @ ");
         pc.appendChild(el("div", { style: { display: "flex", justifyContent: "space-between", fontSize: "12px", padding: "4px 0", borderTop: i > 0 ? "0.5px solid #f0f0ee" : "none" } },
           el("span", { style: { color: "#888" } }, e.date),
-          el("span", { style: { color: "#555" } }, val)
+          el("span", { style: { color: "#555" } }, [e.ex.sets && e.ex.sets + "×" + (e.ex.reps || "?"), e.ex.weight].filter(Boolean).join(" @ "))
         ));
       });
       wrap.appendChild(pc);
@@ -257,9 +251,8 @@ function renderWorkout() {
   wrap.appendChild(el("button", { class: "btn-nav", style: { marginBottom: "1rem", fontSize: "12px" }, onClick: () => saveView(VIEWS.HOME) }, "← All workouts"));
 
   if (state.editingName) {
-    const inp = el("input", { value: workout.name, style: { fontSize: "18px", fontWeight: 700, marginBottom: "0.25rem" }, onInput: (e) => {
-      saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, name: e.target.value } : w));
-    }});
+    const inp = el("input", { value: workout.name, style: { fontSize: "18px", fontWeight: 700, marginBottom: "0.25rem" } });
+    inp.addEventListener("input", (e) => saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, name: e.target.value } : w)));
     inp.addEventListener("blur", () => setState({ editingName: false }));
     wrap.appendChild(inp);
     setTimeout(() => inp.focus(), 0);
@@ -280,23 +273,19 @@ function renderWorkout() {
   if (state.view === VIEWS.SETUP) {
     ["warmup", "main"].forEach(group => {
       const color = group === "warmup" ? AMBER : TEAL;
-      const label = group === "warmup" ? "Warm-up exercises" : "Main exercises";
-      wrap.appendChild(sectionBanner(label, color));
-      wrap.appendChild(el("div", { style: { marginBottom: "12px" } },
-        el("label", { class: "label" }, "Target sets / reps"),
-        el("input", { placeholder: "e.g. 3 sets × 12 reps", value: group === "warmup" ? workout.warmupTarget : workout.mainTarget, onInput: (e) => {
-          saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, [group === "warmup" ? "warmupTarget" : "mainTarget"]: e.target.value } : w));
-        }})
-      ));
+      wrap.appendChild(sectionBanner(group === "warmup" ? "Warm-up exercises" : "Main exercises", color));
+      const tInp = el("input", { placeholder: "e.g. 3 sets × 12 reps", value: group === "warmup" ? workout.warmupTarget : workout.mainTarget });
+      tInp.addEventListener("input", (e) => saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, [group === "warmup" ? "warmupTarget" : "mainTarget"]: e.target.value } : w)));
+      wrap.appendChild(el("div", { style: { marginBottom: "12px" } }, el("label", { class: "label" }, "Target sets / reps"), tInp));
       wrap.appendChild(reorderList(workout[group], group));
       const addRow = el("div", { class: "row", style: { marginBottom: "8px" } });
       const addInp = el("input", { placeholder: "Add " + (group === "warmup" ? "warm-up" : "main") + " exercise", style: { flex: 1 } });
-      addInp.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); });
       const doAdd = () => {
         const val = addInp.value.trim();
         if (!val) return;
         saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, [group]: [...w[group], val] } : w));
       };
+      addInp.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); });
       addRow.appendChild(addInp);
       addRow.appendChild(el("button", { class: "btn-add", onClick: doAdd }, "Add"));
       wrap.appendChild(addRow);
@@ -308,10 +297,13 @@ function renderWorkout() {
 
   if (state.view === VIEWS.LOG) {
     wrap.appendChild(sectionBanner("Warm-up", AMBER));
-    const cardioCard = el("div", { class: "card", style: { borderLeft: "3px solid " + AMBER } });
+    const cardioCard = el("div", { class: "card" });
+    cardioCard.style.borderLeft = "3px solid " + AMBER;
     cardioCard.appendChild(el("div", { style: { fontSize: "16px", fontWeight: 600, marginBottom: "10px" } }, "2–4 min cardio"));
     cardioCard.appendChild(el("label", { class: "label" }, "What did you do?"));
-    cardioCard.appendChild(el("input", { placeholder: "e.g. rowing machine, skipping, bike...", value: log.cardio, onInput: (e) => saveLog({ ...getLog(), cardio: e.target.value }) }));
+    const cardioInp = el("input", { placeholder: "e.g. rowing machine, skipping, bike...", value: log.cardio });
+    cardioInp.addEventListener("input", (e) => saveLogSilent({ ...getLog(), cardio: e.target.value }));
+    cardioCard.appendChild(cardioInp);
     wrap.appendChild(cardioCard);
     if (workout.warmupTarget) wrap.appendChild(targetBanner(workout.warmupTarget, AMBER));
     log.warmup.forEach((row, i) => wrap.appendChild(exCard(row, "warmup", i, AMBER)));
@@ -323,28 +315,37 @@ function renderWorkout() {
 
     const cdRow = el("div", { class: "cooldown-row", style: { background: log.cooldown ? TEAL + "18" : "#f0f0ee", borderColor: log.cooldown ? TEAL : "#ccc" } });
     const cdBox = el("div", { style: { width: "22px", height: "22px", borderRadius: "6px", border: "2px solid " + (log.cooldown ? TEAL : "#bbb"), background: log.cooldown ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } });
-    if (log.cooldown) { const svg = document.createElementNS("http://www.w3.org/2000/svg","svg"); svg.setAttribute("width","12"); svg.setAttribute("height","12"); svg.setAttribute("viewBox","0 0 12 12"); const poly = document.createElementNS("http://www.w3.org/2000/svg","polyline"); poly.setAttribute("points","2,6 5,9 10,3"); poly.setAttribute("stroke","#fff"); poly.setAttribute("stroke-width","2"); poly.setAttribute("fill","none"); svg.appendChild(poly); cdBox.appendChild(svg); }
+    if (log.cooldown) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", "12"); svg.setAttribute("height", "12"); svg.setAttribute("viewBox", "0 0 12 12");
+      const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      poly.setAttribute("points", "2,6 5,9 10,3"); poly.setAttribute("stroke", "#fff"); poly.setAttribute("stroke-width", "2"); poly.setAttribute("fill", "none");
+      svg.appendChild(poly); cdBox.appendChild(svg);
+    }
     cdRow.appendChild(cdBox);
     cdRow.appendChild(el("span", { style: { fontSize: "14px", fontWeight: 500, color: log.cooldown ? TEAL : "#1a1a1a" } }, "Cooldown completed"));
-    cdRow.addEventListener("click", () => saveLog({ ...getLog(), cooldown: !getLog().cooldown }));
+    cdRow.addEventListener("click", () => {
+      const current = getLog();
+      saveLogSilent({ ...current, cooldown: !current.cooldown });
+      render();
+    });
     wrap.appendChild(cdRow);
 
-    const notesArea = el("textarea", { placeholder: "Anything else to note...", style: { minHeight: "80px", resize: "vertical", fontSize: "14px" } }, log.sessionNotes || "");
-    notesArea.addEventListener("input", (e) => {
-      const current = getLog();
-      const key = "w" + state.activeIdx;
-      const updated = { ...current, sessionNotes: e.target.value };
-      state = { ...state, logs: { ...state.logs, [key]: updated } };
-      save("sc_logs", state.logs);
-    });
+    const notesArea = el("textarea", { placeholder: "Anything else to note...", style: { minHeight: "80px", resize: "vertical", fontSize: "14px" } });
+    notesArea.value = log.sessionNotes || "";
+    notesArea.addEventListener("input", (e) => saveLogSilent({ ...getLog(), sessionNotes: e.target.value }));
     wrap.appendChild(el("div", { style: { marginTop: "16px" } }, el("label", { class: "label" }, "Session notes"), notesArea));
     wrap.appendChild(el("button", { class: "btn-primary", style: { marginTop: "12px" }, onClick: buildExport }, "Generate export →"));
   }
 
   if (state.view === VIEWS.EXPORT) {
-    wrap.appendChild(el("textarea", { style: { fontFamily: "monospace", fontSize: "12px", minHeight: "260px", resize: "vertical", marginBottom: "10px" }, readOnly: true }, state.exportText));
-    wrap.appendChild(el("button", { class: "btn-primary", style: { marginBottom: "8px" }, onClick: copyExport }, state.copied ? "Copied!" : "Copy to clipboard"));
-    wrap.appendChild(el("button", { class: "btn-secondary", style: { marginBottom: "8px" }, onClick: () => { saveLog(emptyLog(state.workouts[state.activeIdx])); saveView(VIEWS.LOG); } }, "Start new session"));
+    const ta = el("textarea", { style: { fontFamily: "monospace", fontSize: "12px", minHeight: "260px", resize: "vertical", marginBottom: "10px" } });
+    ta.value = state.exportText;
+    ta.readOnly = true;
+    wrap.appendChild(ta);
+    const copyBtn = el("button", { class: "btn-primary", style: { marginBottom: "8px" }, onClick: copyExport }, state.copied ? "Copied!" : "Copy to clipboard");
+    wrap.appendChild(copyBtn);
+    wrap.appendChild(el("button", { class: "btn-secondary", style: { marginBottom: "8px" }, onClick: () => { saveLogSilent(emptyLog(state.workouts[state.activeIdx])); saveView(VIEWS.LOG); } }, "Start new session"));
     wrap.appendChild(el("button", { class: "btn-secondary", onClick: () => saveView(VIEWS.HOME) }, "← All workouts"));
   }
 
@@ -371,7 +372,6 @@ function buildExport() {
   if (log.main.length) section("Main exercises", log.main, "");
   txt += "Cooldown completed: " + (log.cooldown ? "Yes" : "No") + "\n";
   if (log.sessionNotes) txt += "\nSession notes: " + log.sessionNotes + "\n";
-
   const sessionRecord = { date: new Date().toISOString(), dateLabel: date, workoutName: workout.name, cardio: log.cardio, cooldown: log.cooldown, sessionNotes: log.sessionNotes, warmup: log.warmup, main: log.main };
   const key = "w" + state.activeIdx;
   const newHistory = { ...state.history, [key]: [sessionRecord, ...(state.history[key] || [])] };
