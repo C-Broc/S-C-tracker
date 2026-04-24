@@ -314,7 +314,12 @@ function renderWorkout() {
     Object.assign(notesArea.style,{width:"100%",minHeight:"80px",resize:"vertical",fontSize:"14px",fontFamily:"inherit",background:"#fff",border:"0.5px solid #ccc",borderRadius:"8px",padding:"8px 10px",color:"#1a1a1a",outline:"none",boxSizing:"border-box"});
     notesArea.addEventListener("input",e=>silentLog("sessionNotes",e.target.value));
     wrap.appendChild(el("div",{style:{marginTop:"16px"}},el("label",{class:"lbl"},"Session notes"),notesArea));
-    wrap.appendChild(el("button",{class:"btn-primary",style:{marginTop:"12px"},onClick:buildExport},"Generate export →"));
+    wrap.appendChild(el("div",{style:{display:"flex",gap:"8px",marginTop:"12px"}},
+      el("button",{class:"btn-primary",style:{flex:1},onClick:buildExport},"Generate export →"),
+      el("button",{class:"btn-secondary",style:{width:"auto",padding:"13px 16px",color:"#c0392b",borderColor:"#c0392b"},onClick:()=>{
+        if(confirm("Clear all data for this session?")){ clearLog(); render(); }
+      }},"Clear")
+    ));
   }
 
   if(S.view===VIEWS.EXPORT){
