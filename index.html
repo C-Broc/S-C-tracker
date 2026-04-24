@@ -13,229 +13,216 @@
   button { cursor: pointer; }
   .wrap { max-width: 520px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
   .card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
-  .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; display: block; }
+  .lbl { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; display: block; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
   .btn-nav { background: transparent; border: 0.5px solid #ccc; border-radius: 8px; padding: 7px 16px; font-size: 13px; color: #1a1a1a; }
   .btn-nav.active { background: #e8e8e5; font-weight: 600; }
   .btn-primary { background: #0F6E56; border: none; border-radius: 8px; padding: 13px 20px; font-size: 15px; color: #fff; font-weight: 600; width: 100%; }
   .btn-secondary { background: transparent; border: 0.5px solid #ccc; border-radius: 8px; padding: 11px 20px; font-size: 13px; color: #666; width: 100%; }
   .btn-add { background: transparent; border: 0.5px solid #ccc; border-radius: 8px; padding: 8px 14px; font-size: 13px; color: #1a1a1a; white-space: nowrap; }
-  .section-banner { display: flex; align-items: center; gap: 10px; margin: 1.5rem 0 1rem; }
-  .section-bar { width: 4px; height: 20px; border-radius: 2px; }
-  .section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
-  .target-banner { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+  .sec-banner { display: flex; align-items: center; gap: 10px; margin: 1.5rem 0 1rem; }
+  .sec-bar { width: 4px; height: 20px; border-radius: 2px; }
+  .sec-lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
+  .tgt-banner { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
   .divider { border: none; border-top: 2px solid #ddd; margin: 1.75rem 0; }
-  .cooldown-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; margin-top: 16px; border-radius: 12px; cursor: pointer; border: 0.5px solid #ccc; background: #f0f0ee; }
+  .cd-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; margin-top: 16px; border-radius: 12px; cursor: pointer; }
   .reorder-row { display: flex; align-items: center; gap: 8px; background: #fff; border: 0.5px solid #ddd; border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; }
-  .arrow-btn { background: transparent; border: none; font-size: 13px; padding: 0; line-height: 1; color: #888; }
-  .arrow-btn:disabled { color: #ddd; }
-  .remove-btn { background: transparent; border: none; font-size: 18px; color: #aaa; padding: 0 2px; line-height: 1; }
-  .row { display: flex; gap: 8px; align-items: center; }
-  .history-card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 12px; }
-  .history-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-top: 0.5px solid #f0f0ee; }
-  .progress-card { background: #fff; border: 0.5px solid #ddd; border-left: 3px solid #0F6E56; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+  .arr-btn { background: transparent; border: none; font-size: 13px; padding: 0; line-height: 1; color: #888; cursor: pointer; }
+  .arr-btn:disabled { color: #ddd; cursor: default; }
+  .rm-btn { background: transparent; border: none; font-size: 18px; color: #aaa; padding: 0 2px; line-height: 1; cursor: pointer; }
+  .flex-row { display: flex; gap: 8px; align-items: center; }
+  .hist-card { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 12px; }
+  .hist-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-top: 0.5px solid #f0f0ee; }
+  .prog-card { background: #fff; border: 0.5px solid #ddd; border-left: 3px solid #0F6E56; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
   .pill-btn { border-radius: 20px; padding: 8px 20px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .home-workout-btn { background: #fff; border-radius: 12px; padding: 1rem 1.25rem; text-align: left; cursor: pointer; display: block; width: 100%; margin-bottom: 12px; }
+  .wo-btn { background: #fff; border-radius: 12px; padding: 1rem 1.25rem; text-align: left; cursor: pointer; display: block; width: 100%; margin-bottom: 12px; }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script>
-const AMBER = "#BA7517";
-const TEAL = "#0F6E56";
-const VIEWS = { HOME: "home", SETUP: "setup", LOG: "log", EXPORT: "export", HISTORY: "history" };
+const AMBER = "#BA7517", TEAL = "#0F6E56";
+const VIEWS = { HOME:"home", SETUP:"setup", LOG:"log", EXPORT:"export", HISTORY:"history" };
+const load = (k,f) => { try { return JSON.parse(localStorage.getItem(k)||"null")||f; } catch { return f; } };
+const save = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch {} };
 
-const load = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch { return fallback; } };
-const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
+const defWorkout = name => ({ name, warmup:[], main:[], warmupTarget:"", mainTarget:"" });
+const emptyLog = w => ({ cardio:"", sessionNotes:"", cooldown:false, warmup:w.warmup.map(n=>({name:n,sets:"",reps:"",weight:"",notes:""})), main:w.main.map(n=>({name:n,sets:"",reps:"",weight:"",notes:""})) });
 
-const defaultWorkout = (name) => ({ name, warmup: [], main: [], warmupTarget: "", mainTarget: "" });
-const emptyLog = (w) => ({
-  cardio: "", sessionNotes: "", cooldown: false,
-  warmup: w.warmup.map(n => ({ name: n, sets: "", reps: "", weight: "", notes: "" })),
-  main: w.main.map(n => ({ name: n, sets: "", reps: "", weight: "", notes: "" }))
-});
-
-let state = {
-  workouts: load("sc_workouts", [defaultWorkout("Workout A"), defaultWorkout("Workout B")]),
-  activeIdx: load("sc_activeIdx", 0),
-  logs: load("sc_logs", {}),
-  history: load("sc_history", {}),
-  view: load("sc_view", VIEWS.HOME),
-  exportText: "",
-  copied: false,
-  editingName: false,
-  historyWorkout: 0
+let S = {
+  workouts: load("sc_workouts",[defWorkout("Workout A"),defWorkout("Workout B")]),
+  activeIdx: load("sc_activeIdx",0),
+  logs: load("sc_logs",{}),
+  history: load("sc_history",{}),
+  view: load("sc_view",VIEWS.HOME),
+  exportText: "", copied: false, historyWorkout: 0
 };
 
-// Update state and re-render only for structural changes (not text input)
-function setState(updates) { state = { ...state, ...updates }; render(); }
-function saveView(v) { setState({ view: v }); save("sc_view", v); }
-function saveWorkouts(w) { setState({ workouts: w }); save("sc_workouts", w); }
+// Full re-render — only for structural changes (navigation, adding/removing exercises, cooldown toggle)
+function setState(u) { S={...S,...u}; render(); }
+function saveView(v) { S.view=v; save("sc_view",v); render(); }
 
+// Silent updates — save data without re-rendering (for all text inputs)
+function silentWorkout(idx, field, val) {
+  S.workouts = S.workouts.map((w,i) => i===idx ? {...w,[field]:val} : w);
+  save("sc_workouts", S.workouts);
+}
+function silentLog(field, val) {
+  const key = "w"+S.activeIdx;
+  const log = S.logs[key] || emptyLog(S.workouts[S.activeIdx]);
+  S.logs = {...S.logs, [key]: {...log, [field]:val}};
+  save("sc_logs", S.logs);
+}
+function silentLogRow(group, i, field, val) {
+  const key = "w"+S.activeIdx;
+  const log = S.logs[key] || emptyLog(S.workouts[S.activeIdx]);
+  const rows = [...log[group]];
+  rows[i] = {...rows[i], [field]:val};
+  S.logs = {...S.logs, [key]: {...log, [group]:rows}};
+  save("sc_logs", S.logs);
+}
 function getLog() {
-  const key = "w" + state.activeIdx;
-  return state.logs[key] || emptyLog(state.workouts[state.activeIdx]);
+  return S.logs["w"+S.activeIdx] || emptyLog(S.workouts[S.activeIdx]);
+}
+function clearLog() {
+  const key = "w"+S.activeIdx;
+  S.logs = {...S.logs, [key]: emptyLog(S.workouts[S.activeIdx])};
+  save("sc_logs", S.logs);
 }
 
-// Silent save — updates data without triggering re-render, for text inputs
-function saveLogSilent(newLog) {
-  const key = "w" + state.activeIdx;
-  state = { ...state, logs: { ...state.logs, [key]: newLog } };
-  save("sc_logs", state.logs);
-}
-
-function el(tag, attrs, ...children) {
+function el(tag, attrs, ...kids) {
   const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs || {})) {
-    if (k === "class") e.className = v;
-    else if (k.startsWith("on")) e.addEventListener(k.slice(2).toLowerCase(), v);
-    else if (k === "style" && typeof v === "object") Object.assign(e.style, v);
-    else if (k === "disabled") { if (v) e.disabled = true; }
-    else e.setAttribute(k, v);
+  for (const [k,v] of Object.entries(attrs||{})) {
+    if (k==="class") e.className=v;
+    else if (k==="style"&&typeof v==="object") Object.assign(e.style,v);
+    else if (k==="disabled") { if(v) e.disabled=true; }
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2).toLowerCase(),v);
+    else e.setAttribute(k,v);
   }
-  for (const c of children.flat()) {
-    if (c == null) continue;
-    e.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  for (const c of kids.flat()) if(c!=null) e.appendChild(typeof c==="string"?document.createTextNode(c):c);
+  return e;
+}
+
+function inp(attrs) {
+  const e = document.createElement("input");
+  Object.assign(e.style, { width:"100%" });
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k==="class") e.className=v;
+    else if (k==="style"&&typeof v==="object") Object.assign(e.style,v);
+    else if (k==="onInput") e.addEventListener("input",v);
+    else if (k==="onBlur") e.addEventListener("blur",v);
+    else if (k==="onKeydown") e.addEventListener("keydown",v);
+    else e.setAttribute(k,v);
   }
   return e;
 }
 
-function sectionBanner(label, color) {
-  return el("div", { class: "section-banner" },
-    el("div", { class: "section-bar", style: { background: color } }),
-    el("span", { class: "section-label", style: { color } }, label)
-  );
+function secBanner(label, color) {
+  return el("div",{class:"sec-banner"}, el("div",{class:"sec-bar",style:{background:color}}), el("span",{class:"sec-lbl",style:{color}},label));
 }
-
-function targetBanner(text, color) {
-  return el("div", { class: "target-banner", style: { background: color + "18", border: "0.5px solid " + color + "44" } },
-    el("span", { style: { fontSize: "11px", fontWeight: 600, color, textTransform: "uppercase", letterSpacing: "0.05em" } }, "Target"),
-    el("span", { style: { fontSize: "13px" } }, text)
-  );
+function tgtBanner(text, color) {
+  return el("div",{class:"tgt-banner",style:{background:color+"18",border:"0.5px solid "+color+"44"}},
+    el("span",{style:{fontSize:"11px",fontWeight:600,color,textTransform:"uppercase",letterSpacing:"0.05em"}},"Target"),
+    el("span",{style:{fontSize:"13px"}},text));
 }
 
 function reorderList(items, group) {
-  const container = el("div", {});
-  items.forEach((ex, i) => {
-    container.appendChild(el("div", { class: "reorder-row" },
-      el("div", { style: { display: "flex", flexDirection: "column", gap: "2px" } },
-        el("button", { class: "arrow-btn", disabled: i === 0, onClick: () => {
-          const arr = [...state.workouts[state.activeIdx][group]];
-          [arr[i], arr[i-1]] = [arr[i-1], arr[i]];
-          saveWorkouts(state.workouts.map((w, idx) => idx === state.activeIdx ? { ...w, [group]: arr } : w));
-        }}, "▲"),
-        el("button", { class: "arrow-btn", disabled: i === items.length - 1, onClick: () => {
-          const arr = [...state.workouts[state.activeIdx][group]];
-          [arr[i], arr[i+1]] = [arr[i+1], arr[i]];
-          saveWorkouts(state.workouts.map((w, idx) => idx === state.activeIdx ? { ...w, [group]: arr } : w));
-        }}, "▼")
+  const c = el("div",{});
+  items.forEach((ex,i) => {
+    c.appendChild(el("div",{class:"reorder-row"},
+      el("div",{style:{display:"flex",flexDirection:"column",gap:"2px"}},
+        el("button",{class:"arr-btn",disabled:i===0,onClick:()=>{
+          const arr=[...S.workouts[S.activeIdx][group]]; [arr[i],arr[i-1]]=[arr[i-1],arr[i]];
+          setState({workouts:S.workouts.map((w,idx)=>idx===S.activeIdx?{...w,[group]:arr}:w)});
+          save("sc_workouts",S.workouts);
+        }},"▲"),
+        el("button",{class:"arr-btn",disabled:i===items.length-1,onClick:()=>{
+          const arr=[...S.workouts[S.activeIdx][group]]; [arr[i],arr[i+1]]=[arr[i+1],arr[i]];
+          setState({workouts:S.workouts.map((w,idx)=>idx===S.activeIdx?{...w,[group]:arr}:w)});
+          save("sc_workouts",S.workouts);
+        }},"▼")
       ),
-      el("span", { style: { flex: 1, fontSize: "14px" } }, ex),
-      el("button", { class: "remove-btn", onClick: () => {
-        saveWorkouts(state.workouts.map((w, idx) => idx === state.activeIdx ? { ...w, [group]: w[group].filter((_, j) => j !== i) } : w));
-      }}, "×")
+      el("span",{style:{flex:1,fontSize:"14px"}},ex),
+      el("button",{class:"rm-btn",onClick:()=>{
+        setState({workouts:S.workouts.map((w,idx)=>idx===S.activeIdx?{...w,[group]:w[group].filter((_,j)=>j!==i)}:w)});
+        save("sc_workouts",S.workouts);
+      }},"×")
     ));
   });
-  return container;
+  return c;
 }
 
 function exCard(row, group, i, accent) {
-  const card = el("div", { class: "card" });
-  card.style.borderLeft = "3px solid " + accent;
-  card.appendChild(el("div", { style: { fontSize: "16px", fontWeight: 600, marginBottom: "12px" } }, row.name));
-  const grid = el("div", { class: "grid2" });
-  [["Sets","sets","number"],["Reps","reps","number"]].forEach(([lbl, field, type]) => {
-    const inp = el("input", { type, min: "0", value: row[field] });
-    inp.addEventListener("input", (e) => {
-      const log = getLog();
-      const rows = [...log[group]];
-      rows[i] = { ...rows[i], [field]: e.target.value };
-      saveLogSilent({ ...log, [group]: rows });
-    });
-    grid.appendChild(el("div", {}, el("label", { class: "label" }, lbl), inp));
+  const card = el("div",{class:"card"}); card.style.borderLeft="3px solid "+accent;
+  card.appendChild(el("div",{style:{fontSize:"16px",fontWeight:600,marginBottom:"12px"}},row.name));
+  const grid = el("div",{class:"grid2"});
+  [["Sets","sets","number"],["Reps","reps","number"]].forEach(([lbl,field,type])=>{
+    const input = inp({type,min:"0",value:row[field],onInput:e=>silentLogRow(group,i,field,e.target.value)});
+    grid.appendChild(el("div",{},el("label",{class:"lbl"},lbl),input));
   });
   card.appendChild(grid);
-  const wInp = el("input", { placeholder: "kg / lb", value: row.weight });
-  wInp.addEventListener("input", (e) => {
-    const log = getLog();
-    const rows = [...log[group]];
-    rows[i] = { ...rows[i], weight: e.target.value };
-    saveLogSilent({ ...log, [group]: rows });
-  });
-  card.appendChild(el("div", { style: { marginBottom: "8px" } }, el("label", { class: "label" }, "Weight"), wInp));
-  const nInp = el("input", { placeholder: "Any notes...", value: row.notes });
-  nInp.addEventListener("input", (e) => {
-    const log = getLog();
-    const rows = [...log[group]];
-    rows[i] = { ...rows[i], notes: e.target.value };
-    saveLogSilent({ ...log, [group]: rows });
-  });
-  card.appendChild(el("div", {}, el("label", { class: "label" }, "Notes"), nInp));
+  const wInp = inp({placeholder:"kg / lb",value:row.weight,onInput:e=>silentLogRow(group,i,"weight",e.target.value)});
+  card.appendChild(el("div",{style:{marginBottom:"8px"}},el("label",{class:"lbl"},"Weight"),wInp));
+  const nInp = inp({placeholder:"Any notes...",value:row.notes,onInput:e=>silentLogRow(group,i,"notes",e.target.value)});
+  card.appendChild(el("div",{},el("label",{class:"lbl"},"Notes"),nInp));
   return card;
 }
 
 function renderHome() {
-  const wrap = el("div", { class: "wrap" });
-  wrap.appendChild(el("p", { style: { fontSize: "20px", fontWeight: 700, marginBottom: "4px" } }, "Strength and Conditioning"));
-  wrap.appendChild(el("p", { style: { fontSize: "13px", color: "#666", marginBottom: "2rem" } }, "Choose a workout to begin."));
-  const list = el("div", { style: { marginBottom: "2rem" } });
-  state.workouts.forEach((w, i) => {
-    const color = i === 0 ? AMBER : TEAL;
-    const btn = el("button", { class: "home-workout-btn", style: { border: "0.5px solid " + color, borderLeft: "4px solid " + color }, onClick: () => { setState({ activeIdx: i }); save("sc_activeIdx", i); saveView(VIEWS.LOG); } });
-    btn.appendChild(el("div", { style: { fontSize: "17px", fontWeight: 600, marginBottom: "4px" } }, w.name));
-    btn.appendChild(el("div", { style: { fontSize: "12px", color: "#888" } }, (w.warmup.length + w.main.length) + " exercises"));
+  const wrap = el("div",{class:"wrap"});
+  wrap.appendChild(el("p",{style:{fontSize:"20px",fontWeight:700,marginBottom:"4px"}},"Strength and Conditioning"));
+  wrap.appendChild(el("p",{style:{fontSize:"13px",color:"#666",marginBottom:"2rem"}},"Choose a workout to begin."));
+  const list = el("div",{style:{marginBottom:"2rem"}});
+  S.workouts.forEach((w,i)=>{
+    const color=i===0?AMBER:TEAL;
+    const btn=el("button",{class:"wo-btn",style:{border:"0.5px solid "+color,borderLeft:"4px solid "+color},onClick:()=>{S.activeIdx=i;save("sc_activeIdx",i);saveView(VIEWS.LOG);}});
+    btn.appendChild(el("div",{style:{fontSize:"17px",fontWeight:600,marginBottom:"4px"}},w.name));
+    btn.appendChild(el("div",{style:{fontSize:"12px",color:"#888"}},(w.warmup.length+w.main.length)+" exercises"));
     list.appendChild(btn);
   });
   wrap.appendChild(list);
-  const actions = el("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" } });
-  state.workouts.forEach((w, i) => {
-    actions.appendChild(el("button", { class: "btn-nav", onClick: () => { setState({ activeIdx: i }); save("sc_activeIdx", i); saveView(VIEWS.SETUP); } }, "Edit " + w.name));
-  });
-  actions.appendChild(el("button", { class: "btn-nav", onClick: () => { setState({ historyWorkout: 0 }); saveView(VIEWS.HISTORY); } }, "View history"));
-  actions.appendChild(el("button", { class: "btn-nav", onClick: exportAll }, "Export all data"));
-  wrap.appendChild(actions);
+  const acts=el("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap"}});
+  S.workouts.forEach((w,i)=>acts.appendChild(el("button",{class:"btn-nav",onClick:()=>{S.activeIdx=i;save("sc_activeIdx",i);saveView(VIEWS.SETUP);}},"Edit "+w.name)));
+  acts.appendChild(el("button",{class:"btn-nav",onClick:()=>{setState({historyWorkout:0});saveView(VIEWS.HISTORY);}},"View history"));
+  acts.appendChild(el("button",{class:"btn-nav",onClick:exportAll},"Export all data"));
+  wrap.appendChild(acts);
   return wrap;
 }
 
 function renderHistory() {
-  const wrap = el("div", { class: "wrap" });
-  wrap.appendChild(el("button", { class: "btn-nav", style: { marginBottom: "1rem", fontSize: "12px" }, onClick: () => saveView(VIEWS.HOME) }, "← Back"));
-  wrap.appendChild(el("p", { style: { fontSize: "20px", fontWeight: 700, marginBottom: "1rem" } }, "Session history"));
-  const tabs = el("div", { style: { display: "flex", gap: "8px", marginBottom: "1.5rem" } });
-  state.workouts.forEach((w, i) => {
-    const color = i === 0 ? AMBER : TEAL;
-    const active = state.historyWorkout === i;
-    tabs.appendChild(el("button", { class: "pill-btn", style: { background: active ? color : "transparent", border: "1.5px solid " + color, color: active ? "#fff" : color }, onClick: () => setState({ historyWorkout: i }) }, w.name));
+  const wrap=el("div",{class:"wrap"});
+  wrap.appendChild(el("button",{class:"btn-nav",style:{marginBottom:"1rem",fontSize:"12px"},onClick:()=>saveView(VIEWS.HOME)},"← Back"));
+  wrap.appendChild(el("p",{style:{fontSize:"20px",fontWeight:700,marginBottom:"1rem"}},"Session history"));
+  const tabs=el("div",{style:{display:"flex",gap:"8px",marginBottom:"1.5rem"}});
+  S.workouts.forEach((w,i)=>{
+    const color=i===0?AMBER:TEAL, active=S.historyWorkout===i;
+    tabs.appendChild(el("button",{class:"pill-btn",style:{background:active?color:"transparent",border:"1.5px solid "+color,color:active?"#fff":color},onClick:()=>setState({historyWorkout:i})},w.name));
   });
   wrap.appendChild(tabs);
-  const hw = state.workouts[state.historyWorkout];
-  const hwHistory = state.history["w" + state.historyWorkout] || [];
-  if (!hwHistory.length) wrap.appendChild(el("p", { style: { color: "#888", fontSize: "14px" } }, "No sessions logged yet for " + hw.name + "."));
-  hwHistory.forEach(s => {
-    const card = el("div", { class: "history-card" });
-    card.appendChild(el("div", { style: { fontSize: "14px", fontWeight: 600, marginBottom: "10px" } }, s.dateLabel));
-    if (s.cardio) card.appendChild(el("div", { style: { fontSize: "13px", color: "#666", marginBottom: "8px" } }, "Cardio: " + s.cardio));
-    [...s.warmup, ...s.main].filter(r => r.sets || r.reps || r.weight).forEach(r => {
-      card.appendChild(el("div", { class: "history-row" },
-        el("span", { style: { fontWeight: 500 } }, r.name),
-        el("span", { style: { color: "#555" } }, [r.sets && r.sets + " sets", r.reps && r.reps + " reps", r.weight].filter(Boolean).join(" · "))
-      ));
+  const hw=S.workouts[S.historyWorkout], hwH=S.history["w"+S.historyWorkout]||[];
+  if(!hwH.length) wrap.appendChild(el("p",{style:{color:"#888",fontSize:"14px"}},"No sessions logged yet for "+hw.name+"."));
+  hwH.forEach(s=>{
+    const card=el("div",{class:"hist-card"});
+    card.appendChild(el("div",{style:{fontSize:"14px",fontWeight:600,marginBottom:"10px"}},s.dateLabel));
+    if(s.cardio) card.appendChild(el("div",{style:{fontSize:"13px",color:"#666",marginBottom:"8px"}},"Cardio: "+s.cardio));
+    [...s.warmup,...s.main].filter(r=>r.sets||r.reps||r.weight).forEach(r=>{
+      card.appendChild(el("div",{class:"hist-row"},el("span",{style:{fontWeight:500}},r.name),el("span",{style:{color:"#555"}},[r.sets&&r.sets+" sets",r.reps&&r.reps+" reps",r.weight].filter(Boolean).join(" · "))));
     });
-    if (s.sessionNotes) card.appendChild(el("div", { style: { fontSize: "12px", color: "#888", marginTop: "8px", borderTop: "0.5px solid #f0f0ee", paddingTop: "8px" } }, s.sessionNotes));
-    card.appendChild(el("div", { style: { fontSize: "12px", color: s.cooldown ? TEAL : "#aaa", marginTop: "8px" } }, s.cooldown ? "✓ Cooldown done" : "Cooldown not logged"));
+    if(s.sessionNotes) card.appendChild(el("div",{style:{fontSize:"12px",color:"#888",marginTop:"8px",borderTop:"0.5px solid #f0f0ee",paddingTop:"8px"}},s.sessionNotes));
+    card.appendChild(el("div",{style:{fontSize:"12px",color:s.cooldown?TEAL:"#aaa",marginTop:"8px"}},s.cooldown?"✓ Cooldown done":"Cooldown not logged"));
     wrap.appendChild(card);
   });
-  if (hwHistory.length > 0) {
-    wrap.appendChild(el("p", { style: { fontSize: "13px", fontWeight: 600, margin: "1.5rem 0 1rem" } }, "Exercise progress"));
-    hw.main.forEach(exName => {
-      const entries = hwHistory.map(s => ({ date: s.dateLabel.slice(0,6), ex: s.main.find(r => r.name === exName) })).filter(e => e.ex && (e.ex.sets || e.ex.reps || e.ex.weight));
-      if (!entries.length) return;
-      const pc = el("div", { class: "progress-card" });
-      pc.appendChild(el("div", { style: { fontSize: "14px", fontWeight: 600, marginBottom: "8px" } }, exName));
-      entries.slice(0, 6).forEach((e, i) => {
-        pc.appendChild(el("div", { style: { display: "flex", justifyContent: "space-between", fontSize: "12px", padding: "4px 0", borderTop: i > 0 ? "0.5px solid #f0f0ee" : "none" } },
-          el("span", { style: { color: "#888" } }, e.date),
-          el("span", { style: { color: "#555" } }, [e.ex.sets && e.ex.sets + "×" + (e.ex.reps || "?"), e.ex.weight].filter(Boolean).join(" @ "))
+  if(hwH.length>0){
+    wrap.appendChild(el("p",{style:{fontSize:"13px",fontWeight:600,margin:"1.5rem 0 1rem"}},"Exercise progress"));
+    hw.main.forEach(exName=>{
+      const entries=hwH.map(s=>({date:s.dateLabel.slice(0,6),ex:s.main.find(r=>r.name===exName)})).filter(e=>e.ex&&(e.ex.sets||e.ex.reps||e.ex.weight));
+      if(!entries.length) return;
+      const pc=el("div",{class:"prog-card"});
+      pc.appendChild(el("div",{style:{fontSize:"14px",fontWeight:600,marginBottom:"8px"}},exName));
+      entries.slice(0,6).forEach((e,i)=>{
+        pc.appendChild(el("div",{style:{display:"flex",justifyContent:"space-between",fontSize:"12px",padding:"4px 0",borderTop:i>0?"0.5px solid #f0f0ee":"none"}},
+          el("span",{style:{color:"#888"}},e.date),
+          el("span",{style:{color:"#555"}},[e.ex.sets&&e.ex.sets+"×"+(e.ex.reps||"?"),e.ex.weight].filter(Boolean).join(" @ "))
         ));
       });
       wrap.appendChild(pc);
@@ -245,161 +232,147 @@ function renderHistory() {
 }
 
 function renderWorkout() {
-  const workout = state.workouts[state.activeIdx];
-  const log = getLog();
-  const wrap = el("div", { class: "wrap" });
-  wrap.appendChild(el("button", { class: "btn-nav", style: { marginBottom: "1rem", fontSize: "12px" }, onClick: () => saveView(VIEWS.HOME) }, "← All workouts"));
+  const workout=S.workouts[S.activeIdx], log=getLog();
+  const wrap=el("div",{class:"wrap"});
+  wrap.appendChild(el("button",{class:"btn-nav",style:{marginBottom:"1rem",fontSize:"12px"},onClick:()=>saveView(VIEWS.HOME)},"← All workouts"));
 
-  if (state.editingName) {
-    const inp = el("input", { value: workout.name, style: { fontSize: "18px", fontWeight: 700, marginBottom: "0.25rem" } });
-    inp.addEventListener("input", (e) => saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, name: e.target.value } : w)));
-    inp.addEventListener("blur", () => setState({ editingName: false }));
-    wrap.appendChild(inp);
-    setTimeout(() => inp.focus(), 0);
-  } else {
-    const nameRow = el("p", { style: { fontSize: "20px", fontWeight: 700, marginBottom: "4px", cursor: "pointer" } }, workout.name, " ", el("span", { style: { fontSize: "13px", color: "#aaa", fontWeight: 400 } }, "tap to rename"));
-    nameRow.addEventListener("click", () => setState({ editingName: true }));
-    wrap.appendChild(nameRow);
-  }
-  wrap.appendChild(el("p", { style: { fontSize: "13px", color: "#666", marginBottom: "1.5rem" } }, "Log your session and export for your coach."));
-
-  const nav = el("div", { style: { display: "flex", gap: "8px", marginBottom: "1.5rem", flexWrap: "wrap" } });
-  [["Setup", VIEWS.SETUP], ["Log workout", VIEWS.LOG]].forEach(([label, v]) => {
-    nav.appendChild(el("button", { class: "btn-nav" + (state.view === v ? " active" : ""), onClick: () => saveView(v) }, label));
+  // Workout name — inline editable, silent save, re-render only on blur
+  const nameWrap = el("div",{style:{marginBottom:"4px"}});
+  const nameInp = inp({value:workout.name,style:{fontSize:"18px",fontWeight:700,background:"transparent",border:"none",borderBottom:"1.5px solid #ccc",borderRadius:"0",padding:"0 0 2px"},
+    onInput:e=>silentWorkout(S.activeIdx,"name",e.target.value),
+    onBlur:()=>render()
   });
-  if (state.exportText) nav.appendChild(el("button", { class: "btn-nav" + (state.view === VIEWS.EXPORT ? " active" : ""), onClick: () => saveView(VIEWS.EXPORT) }, "Export"));
+  nameWrap.appendChild(nameInp);
+  nameWrap.appendChild(el("p",{style:{fontSize:"11px",color:"#aaa",marginTop:"2px"}},"tap name to rename"));
+  wrap.appendChild(nameWrap);
+  wrap.appendChild(el("p",{style:{fontSize:"13px",color:"#666",marginBottom:"1.5rem"}},"Log your session and export for your coach."));
+
+  const nav=el("div",{style:{display:"flex",gap:"8px",marginBottom:"1.5rem",flexWrap:"wrap"}});
+  [["Setup",VIEWS.SETUP],["Log workout",VIEWS.LOG]].forEach(([label,v])=>{
+    nav.appendChild(el("button",{class:"btn-nav"+(S.view===v?" active":""),onClick:()=>saveView(v)},label));
+  });
+  if(S.exportText) nav.appendChild(el("button",{class:"btn-nav"+(S.view===VIEWS.EXPORT?" active":""),onClick:()=>saveView(VIEWS.EXPORT)},"Export"));
   wrap.appendChild(nav);
 
-  if (state.view === VIEWS.SETUP) {
-    ["warmup", "main"].forEach(group => {
-      const color = group === "warmup" ? AMBER : TEAL;
-      wrap.appendChild(sectionBanner(group === "warmup" ? "Warm-up exercises" : "Main exercises", color));
-      const tInp = el("input", { placeholder: "e.g. 3 sets × 12 reps", value: group === "warmup" ? workout.warmupTarget : workout.mainTarget });
-      tInp.addEventListener("input", (e) => saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, [group === "warmup" ? "warmupTarget" : "mainTarget"]: e.target.value } : w)));
-      wrap.appendChild(el("div", { style: { marginBottom: "12px" } }, el("label", { class: "label" }, "Target sets / reps"), tInp));
-      wrap.appendChild(reorderList(workout[group], group));
-      const addRow = el("div", { class: "row", style: { marginBottom: "8px" } });
-      const addInp = el("input", { placeholder: "Add " + (group === "warmup" ? "warm-up" : "main") + " exercise", style: { flex: 1 } });
-      const doAdd = () => {
-        const val = addInp.value.trim();
-        if (!val) return;
-        saveWorkouts(state.workouts.map((w, i) => i === state.activeIdx ? { ...w, [group]: [...w[group], val] } : w));
+  if(S.view===VIEWS.SETUP){
+    ["warmup","main"].forEach(group=>{
+      const color=group==="warmup"?AMBER:TEAL;
+      wrap.appendChild(secBanner(group==="warmup"?"Warm-up exercises":"Main exercises",color));
+      const tField=group==="warmup"?"warmupTarget":"mainTarget";
+      const tInp=inp({placeholder:"e.g. 3 sets × 12 reps",value:workout[tField],
+        onInput:e=>silentWorkout(S.activeIdx,tField,e.target.value),
+        onBlur:()=>render()
+      });
+      wrap.appendChild(el("div",{style:{marginBottom:"12px"}},el("label",{class:"lbl"},"Target sets / reps"),tInp));
+      wrap.appendChild(reorderList(workout[group],group));
+      const addRow=el("div",{class:"flex-row",style:{marginBottom:"8px"}});
+      const addInp=inp({placeholder:"Add "+(group==="warmup"?"warm-up":"main")+" exercise",style:{flex:1,width:"auto"}});
+      const doAdd=()=>{
+        const val=addInp.value.trim(); if(!val) return;
+        const updated=S.workouts.map((w,i)=>i===S.activeIdx?{...w,[group]:[...w[group],val]}:w);
+        setState({workouts:updated}); save("sc_workouts",updated);
       };
-      addInp.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); });
+      addInp.addEventListener("keydown",e=>{if(e.key==="Enter") doAdd();});
       addRow.appendChild(addInp);
-      addRow.appendChild(el("button", { class: "btn-add", onClick: doAdd }, "Add"));
+      addRow.appendChild(el("button",{class:"btn-add",onClick:doAdd},"Add"));
       wrap.appendChild(addRow);
     });
-    if (workout.warmup.length + workout.main.length > 0) {
-      wrap.appendChild(el("button", { class: "btn-primary", style: { marginTop: "1.5rem" }, onClick: () => saveView(VIEWS.LOG) }, "Start logging →"));
-    }
+    if(workout.warmup.length+workout.main.length>0)
+      wrap.appendChild(el("button",{class:"btn-primary",style:{marginTop:"1.5rem"},onClick:()=>saveView(VIEWS.LOG)},"Start logging →"));
   }
 
-  if (state.view === VIEWS.LOG) {
-    wrap.appendChild(sectionBanner("Warm-up", AMBER));
-    const cardioCard = el("div", { class: "card" });
-    cardioCard.style.borderLeft = "3px solid " + AMBER;
-    cardioCard.appendChild(el("div", { style: { fontSize: "16px", fontWeight: 600, marginBottom: "10px" } }, "2–4 min cardio"));
-    cardioCard.appendChild(el("label", { class: "label" }, "What did you do?"));
-    const cardioInp = el("input", { placeholder: "e.g. rowing machine, skipping, bike...", value: log.cardio });
-    cardioInp.addEventListener("input", (e) => saveLogSilent({ ...getLog(), cardio: e.target.value }));
-    cardioCard.appendChild(cardioInp);
-    wrap.appendChild(cardioCard);
-    if (workout.warmupTarget) wrap.appendChild(targetBanner(workout.warmupTarget, AMBER));
-    log.warmup.forEach((row, i) => wrap.appendChild(exCard(row, "warmup", i, AMBER)));
-    wrap.appendChild(el("hr", { class: "divider" }));
-    wrap.appendChild(sectionBanner("Main exercises", TEAL));
-    if (workout.mainTarget) wrap.appendChild(targetBanner(workout.mainTarget, TEAL));
-    if (!log.main.length) wrap.appendChild(el("p", { style: { color: "#888", fontSize: "14px" } }, "No main exercises set up yet."));
-    log.main.forEach((row, i) => wrap.appendChild(exCard(row, "main", i, TEAL)));
+  if(S.view===VIEWS.LOG){
+    wrap.appendChild(secBanner("Warm-up",AMBER));
+    const cc=el("div",{class:"card"}); cc.style.borderLeft="3px solid "+AMBER;
+    cc.appendChild(el("div",{style:{fontSize:"16px",fontWeight:600,marginBottom:"10px"}},"2–4 min cardio"));
+    cc.appendChild(el("label",{class:"lbl"},"What did you do?"));
+    cc.appendChild(inp({placeholder:"e.g. rowing machine, skipping, bike...",value:log.cardio,onInput:e=>silentLog("cardio",e.target.value)}));
+    wrap.appendChild(cc);
+    if(workout.warmupTarget) wrap.appendChild(tgtBanner(workout.warmupTarget,AMBER));
+    log.warmup.forEach((row,i)=>wrap.appendChild(exCard(row,"warmup",i,AMBER)));
+    wrap.appendChild(el("hr",{class:"divider"}));
+    wrap.appendChild(secBanner("Main exercises",TEAL));
+    if(workout.mainTarget) wrap.appendChild(tgtBanner(workout.mainTarget,TEAL));
+    if(!log.main.length) wrap.appendChild(el("p",{style:{color:"#888",fontSize:"14px"}},"No main exercises set up yet."));
+    log.main.forEach((row,i)=>wrap.appendChild(exCard(row,"main",i,TEAL)));
 
-    const cdRow = el("div", { class: "cooldown-row", style: { background: log.cooldown ? TEAL + "18" : "#f0f0ee", borderColor: log.cooldown ? TEAL : "#ccc" } });
-    const cdBox = el("div", { style: { width: "22px", height: "22px", borderRadius: "6px", border: "2px solid " + (log.cooldown ? TEAL : "#bbb"), background: log.cooldown ? TEAL : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } });
-    if (log.cooldown) {
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", "12"); svg.setAttribute("height", "12"); svg.setAttribute("viewBox", "0 0 12 12");
-      const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-      poly.setAttribute("points", "2,6 5,9 10,3"); poly.setAttribute("stroke", "#fff"); poly.setAttribute("stroke-width", "2"); poly.setAttribute("fill", "none");
+    const cdRow=el("div",{class:"cd-row",style:{background:log.cooldown?TEAL+"18":"#f0f0ee",border:"0.5px solid "+(log.cooldown?TEAL:"#ccc")}});
+    const cdBox=el("div",{style:{width:"22px",height:"22px",borderRadius:"6px",border:"2px solid "+(log.cooldown?TEAL:"#bbb"),background:log.cooldown?TEAL:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}});
+    if(log.cooldown){
+      const svg=document.createElementNS("http://www.w3.org/2000/svg","svg"); svg.setAttribute("width","12"); svg.setAttribute("height","12"); svg.setAttribute("viewBox","0 0 12 12");
+      const poly=document.createElementNS("http://www.w3.org/2000/svg","polyline"); poly.setAttribute("points","2,6 5,9 10,3"); poly.setAttribute("stroke","#fff"); poly.setAttribute("stroke-width","2"); poly.setAttribute("fill","none");
       svg.appendChild(poly); cdBox.appendChild(svg);
     }
     cdRow.appendChild(cdBox);
-    cdRow.appendChild(el("span", { style: { fontSize: "14px", fontWeight: 500, color: log.cooldown ? TEAL : "#1a1a1a" } }, "Cooldown completed"));
-    cdRow.addEventListener("click", () => {
-      const current = getLog();
-      saveLogSilent({ ...current, cooldown: !current.cooldown });
-      render();
-    });
+    cdRow.appendChild(el("span",{style:{fontSize:"14px",fontWeight:500,color:log.cooldown?TEAL:"#1a1a1a"}},"Cooldown completed"));
+    cdRow.addEventListener("click",()=>{ silentLog("cooldown",!getLog().cooldown); render(); });
     wrap.appendChild(cdRow);
 
-    const notesArea = el("textarea", { placeholder: "Anything else to note...", style: { minHeight: "80px", resize: "vertical", fontSize: "14px" } });
-    notesArea.value = log.sessionNotes || "";
-    notesArea.addEventListener("input", (e) => saveLogSilent({ ...getLog(), sessionNotes: e.target.value }));
-    wrap.appendChild(el("div", { style: { marginTop: "16px" } }, el("label", { class: "label" }, "Session notes"), notesArea));
-    wrap.appendChild(el("button", { class: "btn-primary", style: { marginTop: "12px" }, onClick: buildExport }, "Generate export →"));
+    const notesArea=document.createElement("textarea");
+    notesArea.placeholder="Anything else to note...";
+    notesArea.value=log.sessionNotes||"";
+    Object.assign(notesArea.style,{width:"100%",minHeight:"80px",resize:"vertical",fontSize:"14px",fontFamily:"inherit",background:"#fff",border:"0.5px solid #ccc",borderRadius:"8px",padding:"8px 10px",color:"#1a1a1a",outline:"none",boxSizing:"border-box"});
+    notesArea.addEventListener("input",e=>silentLog("sessionNotes",e.target.value));
+    wrap.appendChild(el("div",{style:{marginTop:"16px"}},el("label",{class:"lbl"},"Session notes"),notesArea));
+    wrap.appendChild(el("button",{class:"btn-primary",style:{marginTop:"12px"},onClick:buildExport},"Generate export →"));
   }
 
-  if (state.view === VIEWS.EXPORT) {
-    const ta = el("textarea", { style: { fontFamily: "monospace", fontSize: "12px", minHeight: "260px", resize: "vertical", marginBottom: "10px" } });
-    ta.value = state.exportText;
-    ta.readOnly = true;
+  if(S.view===VIEWS.EXPORT){
+    const ta=document.createElement("textarea");
+    ta.value=S.exportText; ta.readOnly=true;
+    Object.assign(ta.style,{width:"100%",fontFamily:"monospace",fontSize:"12px",minHeight:"260px",resize:"vertical",marginBottom:"10px",background:"#fff",border:"0.5px solid #ccc",borderRadius:"8px",padding:"8px 10px",color:"#1a1a1a",outline:"none",boxSizing:"border-box"});
     wrap.appendChild(ta);
-    const copyBtn = el("button", { class: "btn-primary", style: { marginBottom: "8px" }, onClick: copyExport }, state.copied ? "Copied!" : "Copy to clipboard");
-    wrap.appendChild(copyBtn);
-    wrap.appendChild(el("button", { class: "btn-secondary", style: { marginBottom: "8px" }, onClick: () => { saveLogSilent(emptyLog(state.workouts[state.activeIdx])); saveView(VIEWS.LOG); } }, "Start new session"));
-    wrap.appendChild(el("button", { class: "btn-secondary", onClick: () => saveView(VIEWS.HOME) }, "← All workouts"));
+    wrap.appendChild(el("button",{class:"btn-primary",style:{marginBottom:"8px"},onClick:copyExport},S.copied?"Copied!":"Copy to clipboard"));
+    wrap.appendChild(el("button",{class:"btn-secondary",style:{marginBottom:"8px"},onClick:()=>{clearLog();saveView(VIEWS.LOG);}},"Start new session"));
+    wrap.appendChild(el("button",{class:"btn-secondary",onClick:()=>saveView(VIEWS.HOME)},"← All workouts"));
   }
-
   return wrap;
 }
 
-function buildExport() {
-  const workout = state.workouts[state.activeIdx];
-  const log = getLog();
-  const date = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  let txt = workout.name.toUpperCase() + " — " + date + "\n" + "=".repeat(40) + "\n\n";
-  const section = (label, rows, cardio) => {
-    txt += label.toUpperCase() + "\n" + "-".repeat(24) + "\n";
-    if (cardio) txt += "Cardio: " + cardio + "\n\n";
-    rows.forEach(r => {
-      txt += r.name + "\n";
-      const parts = [r.sets && "Sets: " + r.sets, r.reps && "Reps: " + r.reps, r.weight && "Weight: " + r.weight].filter(Boolean);
-      if (parts.length) txt += "  " + parts.join(" | ") + "\n";
-      if (r.notes) txt += "  Notes: " + r.notes + "\n";
-      txt += "\n";
+function buildExport(){
+  const workout=S.workouts[S.activeIdx], log=getLog();
+  const date=new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  let txt=workout.name.toUpperCase()+" — "+date+"\n"+"=".repeat(40)+"\n\n";
+  const section=(label,rows,cardio)=>{
+    txt+=label.toUpperCase()+"\n"+"-".repeat(24)+"\n";
+    if(cardio) txt+="Cardio: "+cardio+"\n\n";
+    rows.forEach(r=>{
+      txt+=r.name+"\n";
+      const parts=[r.sets&&"Sets: "+r.sets,r.reps&&"Reps: "+r.reps,r.weight&&"Weight: "+r.weight].filter(Boolean);
+      if(parts.length) txt+="  "+parts.join(" | ")+"\n";
+      if(r.notes) txt+="  Notes: "+r.notes+"\n";
+      txt+="\n";
     });
   };
-  if (log.warmup.length || log.cardio) section("Warm-up", log.warmup, log.cardio);
-  if (log.main.length) section("Main exercises", log.main, "");
-  txt += "Cooldown completed: " + (log.cooldown ? "Yes" : "No") + "\n";
-  if (log.sessionNotes) txt += "\nSession notes: " + log.sessionNotes + "\n";
-  const sessionRecord = { date: new Date().toISOString(), dateLabel: date, workoutName: workout.name, cardio: log.cardio, cooldown: log.cooldown, sessionNotes: log.sessionNotes, warmup: log.warmup, main: log.main };
-  const key = "w" + state.activeIdx;
-  const newHistory = { ...state.history, [key]: [sessionRecord, ...(state.history[key] || [])] };
-  save("sc_history", newHistory);
-  setState({ exportText: txt, history: newHistory });
+  if(log.warmup.length||log.cardio) section("Warm-up",log.warmup,log.cardio);
+  if(log.main.length) section("Main exercises",log.main,"");
+  txt+="Cooldown completed: "+(log.cooldown?"Yes":"No")+"\n";
+  if(log.sessionNotes) txt+="\nSession notes: "+log.sessionNotes+"\n";
+  const rec={date:new Date().toISOString(),dateLabel:date,workoutName:workout.name,cardio:log.cardio,cooldown:log.cooldown,sessionNotes:log.sessionNotes,warmup:log.warmup,main:log.main};
+  const key="w"+S.activeIdx;
+  S.history={...S.history,[key]:[rec,...(S.history[key]||[])]};
+  save("sc_history",S.history);
+  S.exportText=txt;
   saveView(VIEWS.EXPORT);
 }
 
-function copyExport() {
-  navigator.clipboard.writeText(state.exportText).then(() => {
-    setState({ copied: true });
-    setTimeout(() => setState({ copied: false }), 2000);
+function copyExport(){
+  navigator.clipboard.writeText(S.exportText).then(()=>{
+    S.copied=true; render();
+    setTimeout(()=>{ S.copied=false; render(); },2000);
   });
 }
 
-function exportAll() {
-  const blob = new Blob([JSON.stringify({ workouts: state.workouts, history: state.history }, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "sc-tracker-backup-" + new Date().toISOString().slice(0, 10) + ".json";
-  a.click();
+function exportAll(){
+  const blob=new Blob([JSON.stringify({workouts:S.workouts,history:S.history},null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="sc-tracker-backup-"+new Date().toISOString().slice(0,10)+".json"; a.click();
 }
 
-function render() {
-  const root = document.getElementById("root");
-  root.innerHTML = "";
-  if (state.view === VIEWS.HOME) root.appendChild(renderHome());
-  else if (state.view === VIEWS.HISTORY) root.appendChild(renderHistory());
+function render(){
+  const root=document.getElementById("root"); root.innerHTML="";
+  if(S.view===VIEWS.HOME) root.appendChild(renderHome());
+  else if(S.view===VIEWS.HISTORY) root.appendChild(renderHistory());
   else root.appendChild(renderWorkout());
 }
 
