@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Archive — Cal Ross</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f7f4ee;
+    --ink: #1a1814;
+    --ink-soft: #4a4640;
+    --ink-faint: #8b857c;
+    --rule: #d9d3c5;
+    --rule-soft: #e8e3d6;
+    --accent-run: #8b3a2f;
+    --accent-strength: #2d4a3e;
+    --accent-note: #6b5a3d;
+    --highlight: #f0e8d0;
+    --shadow: 0 1px 0 rgba(26,24,20,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 15px;
+    min-height: 100vh;
+    padding-bottom: 4rem;
+  }
+
+  /* ---------- HEADER ---------- */
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding: 2rem 2.5rem 1.5rem;
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(10px);
+    background: rgba(247, 244, 238, 0.92);
+  }
+
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 2rem;
+    flex-wrap: wrap;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 1.75rem;
+    font-style: italic;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  h1 em {
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .meta-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ---------- TABS ---------- */
+  nav.tabs {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.25rem;
+    border-bottom: none;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  nav.tabs button {
+    background: none;
+    border: none;
+    padding: 0.5rem 0;
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    color: var(--ink-faint);
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    font-weight: 400;
+  }
+
+  nav.tabs button:hover { color: var(--ink-soft); }
+  nav.tabs button.active {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ---------- LAYOUT ---------- */
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ---------- SEARCH ---------- */
+  .search-bar {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  .search-bar input {
+    width: 100%;
+    padding: 1.25rem 1.5rem 1.25rem 3.25rem;
+    font-family: 'Fraunces', serif;
+    font-size: 1.4rem;
+    background: white;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+    font-style: italic;
+  }
+
+  .search-bar input:focus {
+    border-color: var(--ink);
+  }
+
+  .search-bar input::placeholder {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--ink-faint);
+    pointer-events: none;
+  }
+
+  .filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+    align-items: center;
+  }
+
+  .filter-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin-right: 0.5rem;
+  }
+
+  .chip {
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    padding: 0.4rem 0.85rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    border-radius: 100px;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+
+  .chip:hover {
+    border-color: var(--ink-soft);
+    color: var(--ink);
+  }
+
+  .chip.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .results-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  /* ---------- SESSION CARD ---------- */
+  .session {
+    background: white;
+    border: 1px solid var(--rule);
+    margin-bottom: 1rem;
+    transition: border-color 0.15s;
+    border-radius: 2px;
+  }
+
+  .session:hover { border-color: var(--ink-soft); }
+
+  .session-header {
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .session-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    padding-top: 0.15rem;
+    text-align: right;
+    min-width: 110px;
+  }
+
+  .session-date .day-of-week {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    margin-bottom: 0.15rem;
+  }
+
+  .session-date .date-main {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .session-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+
+  .session-tags {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .session-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.18rem 0.55rem;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+
+  .session-tag.run { background: rgba(139, 58, 47, 0.1); color: var(--accent-run); }
+  .session-tag.strength { background: rgba(45, 74, 62, 0.1); color: var(--accent-strength); }
+  .session-tag.note { background: rgba(107, 90, 61, 0.12); color: var(--accent-note); }
+  .session-tag.other { background: var(--rule-soft); color: var(--ink-soft); }
+  .session-tag.metric {
+    background: transparent;
+    color: var(--ink-faint);
+    border: 1px solid var(--rule);
+  }
+  .session-tag.comments {
+    background: var(--highlight);
+    color: var(--ink-soft);
+  }
+
+  .star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-faint);
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    transition: color 0.15s, transform 0.15s;
+    line-height: 1;
+  }
+
+  .star-btn:hover { color: var(--ink); transform: scale(1.15); }
+  .star-btn.active { color: #c89400; }
+
+  .session-body {
+    display: none;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    border-top: 1px solid var(--rule-soft);
+    margin-top: 0;
+    padding-top: 1.5rem;
+  }
+
+  .session.expanded .session-body { display: block; }
+
+  .session.expanded .session-header {
+    border-bottom: 0;
+  }
+
+  .body-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .body-section:last-child { margin-bottom: 0; }
+
+  .body-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.6rem;
+  }
+
+  .description {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .description mark {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 0 2px;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1.25rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--rule-soft);
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .metric-item .metric-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.25rem;
+  }
+
+  .metric-item .metric-value {
+    font-family: 'Fraunces', serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .metric-item .metric-value .metric-unit {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    font-weight: 400;
+    margin-left: 0.15rem;
+  }
+
+  .laps-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    margin-top: 0.5rem;
+  }
+
+  .laps-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+
+  .laps-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--rule-soft);
+    color: var(--ink);
+  }
+
+  .laps-table tr:last-child td { border-bottom: none; }
+
+  /* ---------- COMMENTS ---------- */
+  .comment {
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 2px solid var(--rule);
+    background: rgba(232, 227, 214, 0.3);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .comment.coach { border-left-color: var(--accent-strength); }
+  .comment.athlete { border-left-color: var(--accent-run); }
+
+  .comment-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+    align-items: baseline;
+  }
+
+  .comment-author {
+    font-family: 'Fraunces', serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .comment-author .role-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    margin-left: 0.4rem;
+    font-weight: 400;
+  }
+
+  .comment-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+  }
+
+  .comment-text {
+    font-size: 0.93rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .comment-text mark {
+    background: var(--highlight);
+    color: var(--ink);
+    padding: 0 2px;
+  }
+
+  /* ---------- BROWSE ---------- */
+  .week-block {
+    margin-bottom: 3rem;
+  }
+
+  .week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .week-label {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .week-summary {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+  }
+
+  .week-block .session { margin-bottom: 0.5rem; }
+
+  /* ---------- STATS ---------- */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .stat-card {
+    background: white;
+    border: 1px solid var(--rule);
+    padding: 1.5rem;
+    border-radius: 2px;
+  }
+
+  .stat-card .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-card .stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 2.5rem;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .stat-card .stat-value .stat-unit {
+    font-size: 1rem;
+    color: var(--ink-faint);
+    margin-left: 0.25rem;
+  }
+
+  .stat-card .stat-detail {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 0.5rem;
+  }
+
+  .chart-section {
+    background: white;
+    border: 1px solid var(--rule);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    border-radius: 2px;
+  }
+
+  .chart-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    margin-bottom: 1.25rem;
+    color: var(--ink);
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 160px;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 4px;
+  }
+
+  .bar-chart .bar {
+    flex: 1;
+    min-width: 4px;
+    background: var(--ink-soft);
+    position: relative;
+    transition: background 0.2s;
+    cursor: default;
+  }
+
+  .bar-chart .bar.run { background: var(--accent-run); }
+  .bar-chart .bar.strength { background: var(--accent-strength); }
+  .bar-chart .bar:hover {
+    background: var(--ink);
+  }
+
+  .bar-chart .bar:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.3rem 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    margin-bottom: 4px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .chart-x-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+  }
+
+  .chart-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .chart-legend .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .chart-legend .swatch.run { background: var(--accent-run); }
+  .chart-legend .swatch.strength { background: var(--accent-strength); }
+
+  .breakdown-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .breakdown-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .breakdown-row:last-child { border-bottom: none; }
+
+  .breakdown-name {
+    font-family: 'Fraunces', serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+
+  .breakdown-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 60%;
+    grid-column: 1 / -1;
+  }
+
+  .breakdown-bar .bar-fill {
+    flex: 1;
+    height: 6px;
+    background: var(--rule-soft);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .breakdown-bar .bar-fill .fill {
+    height: 100%;
+    background: var(--ink-soft);
+  }
+
+  .breakdown-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    min-width: 30px;
+    text-align: right;
+  }
+
+  /* ---------- STRUCTURED WORKOUT (PRESCRIPTION) ---------- */
+  .prescription {
+    background: rgba(45, 74, 62, 0.04);
+    border: 1px solid rgba(45, 74, 62, 0.18);
+    padding: 1.25rem 1.5rem;
+    border-radius: 2px;
+  }
+
+  .prescription-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(45, 74, 62, 0.15);
+  }
+
+  .prescription-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--accent-strength);
+    font-weight: 500;
+  }
+
+  .prescription-total {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-strength);
+    opacity: 0.7;
+  }
+
+  .step-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.55rem 0;
+    font-family: 'Fraunces', serif;
+    font-size: 0.95rem;
+  }
+
+  .step-row + .step-row {
+    border-top: 1px dotted rgba(45, 74, 62, 0.15);
+  }
+
+  .step-intensity-marker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    min-width: 70px;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .step-intensity-marker.warmup,
+  .step-intensity-marker.cooldown {
+    background: rgba(107, 90, 61, 0.15);
+    color: var(--accent-note);
+  }
+  .step-intensity-marker.active {
+    background: rgba(139, 58, 47, 0.12);
+    color: var(--accent-run);
+  }
+  .step-intensity-marker.rest {
+    background: var(--rule-soft);
+    color: var(--ink-faint);
+  }
+  .step-intensity-marker.other {
+    background: var(--rule-soft);
+    color: var(--ink-soft);
+  }
+
+  .step-label {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .step-detail {
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-top: 0.1rem;
+    font-size: 0.85rem;
+  }
+
+  .step-duration {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .repeat-block {
+    background: rgba(255, 255, 255, 0.6);
+    border-left: 3px solid var(--accent-strength);
+    padding: 0.5rem 1rem;
+    margin: 0.4rem 0;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .repeat-header {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-strength);
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+  }
+
+  .repeat-block .step-row {
+    padding: 0.35rem 0;
+  }
+
+  /* ---------- EMPTY STATES ---------- */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--ink-faint);
+  }
+
+  .empty-state h3 {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.25rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.5rem;
+  }
+
+  /* ---------- LOADING ---------- */
+  .loading {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--ink-faint);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 700px) {
+    header { padding: 1.25rem 1.25rem 1rem; }
+    main { padding: 1.5rem 1.25rem; }
+    .masthead { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+    h1 { font-size: 1.4rem; }
+    .search-bar input { font-size: 1.05rem; padding: 1rem 1rem 1rem 2.75rem; }
+    .session-header {
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+    }
+    .session-date {
+      grid-row: 2;
+      grid-column: 1 / -1;
+      text-align: left;
+      min-width: auto;
+      font-size: 0.7rem;
+    }
+    .session-title { font-size: 1rem; }
+    nav.tabs { gap: 1.25rem; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="masthead">
+    <h1><em>Training</em> Archive</h1>
+    <div class="meta-line" id="meta-line">Loading…</div>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="search">Search</button>
+    <button class="tab-btn" data-tab="browse">Browse</button>
+    <button class="tab-btn" data-tab="stats">Statistics</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ SEARCH PANEL ============ -->
+  <section class="panel active" id="panel-search">
+    <div class="search-bar">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="search" id="search-input" placeholder="Search exercises, descriptions, comments…" autofocus>
+    </div>
+
+    <div class="filters">
+      <span class="filter-label">Type</span>
+      <button class="chip type-chip active" data-type="all">All</button>
+      <button class="chip type-chip" data-type="Run">Runs</button>
+      <button class="chip type-chip" data-type="Strength Training">Strength</button>
+      <button class="chip type-chip" data-type="Notes">Notes</button>
+      <button class="chip type-chip" data-type="Other">Other</button>
+      <span style="width: 1rem"></span>
+      <span class="filter-label">Show</span>
+      <button class="chip extra-chip" data-extra="comments">With comments</button>
+      <button class="chip extra-chip" data-extra="favourites">★ Favourites</button>
+    </div>
+
+    <div class="results-meta" id="results-meta">All sessions</div>
+    <div id="results"></div>
+  </section>
+
+  <!-- ============ BROWSE PANEL ============ -->
+  <section class="panel" id="panel-browse">
+    <div id="browse-content"><div class="loading">Loading…</div></div>
+  </section>
+
+  <!-- ============ STATS PANEL ============ -->
+  <section class="panel" id="panel-stats">
+    <div id="stats-content"><div class="loading">Loading…</div></div>
+  </section>
+</main>
+
+<script>
+// ===================== STATE =====================
+let archive = null;
+let workouts = [];
+const FAV_KEY = 'fs-archive-favourites';
+let favourites = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
+
+let currentSearch = '';
+let currentTypeFilter = 'all';
+let currentExtra = null; // 'comments' | 'favourites' | null
+
+// ===================== UTILITIES =====================
+function escapeHTML(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlight(text, query) {
+  if (!query) return escapeHTML(text);
+  const escaped = escapeHTML(text);
+  const re = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+  return escaped.replace(re, '<mark>$1</mark>');
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function dayOfWeek(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+}
+
+function fmtDuration(seconds) {
+  if (!seconds && seconds !== 0) return null;
+  const m = Math.round(seconds / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  const remM = m % 60;
+  return `${h}h ${remM}m`;
+}
+
+function fmtTimestamp(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const day = d.getDate();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${day} ${months[d.getMonth()]} ${hh}:${mm}`;
+}
+
+function categorise(w) {
+  if (w.activity_sub_type === 'Notes') return 'Notes';
+  if (w.activity_type === 'Run') return 'Run';
+  if (w.activity_type === 'Strength Training') return 'Strength Training';
+  return 'Other';
+}
+
+function tagClass(category) {
+  const map = { 'Run': 'run', 'Strength Training': 'strength', 'Notes': 'note' };
+  return map[category] || 'other';
+}
+
+function tagLabel(w) {
+  if (w.activity_sub_type === 'Notes') return 'Coach note';
+  if (w.activity_type === 'Run') {
+    const sub = (w.activity_sub_type || '').trim();
+    if (sub) return `Run — ${sub}`;
+    return 'Run';
+  }
+  if (w.activity_type === 'Strength Training') return 'Strength';
+  if (w.activity_type) return w.activity_type;
+  return 'Session';
+}
+
+// ISO week for a given date (Monday-based)
+function isoWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = (d.getUTCDay() + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  const diff = (d - firstThursday) / 86400000;
+  return [d.getUTCFullYear(), 1 + Math.round((diff - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7)];
+}
+
+function weekStartString(dateStr) {
+  // Returns the ISO Monday for the week containing this date
+  const d = new Date(dateStr);
+  const day = d.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
+// ===================== SEARCH =====================
+function flattenStructuredSteps(steps) {
+  const out = [];
+  for (const s of (steps || [])) {
+    if (s.type === 'repeat') {
+      out.push(...flattenStructuredSteps(s.steps || []));
+    } else {
+      if (s.name) out.push(s.name);
+      if (s.intensity) out.push(s.intensity);
+    }
+  }
+  return out;
+}
+
+function buildSearchableText(w) {
+  const parts = [
+    w.name || '',
+    w.description || '',
+    w.activity_sub_type || '',
+    w.post_workout_notes || '',
+    ...(w.comments || []).map(c => `${c.author || ''} ${c.text || ''}`),
+    ...(w.structured_workout ? flattenStructuredSteps(w.structured_workout.steps) : []),
+  ];
+  return parts.join('\n').toLowerCase();
+}
+
+function matchesSearch(w, query) {
+  if (!query) return true;
+  return (w._searchText || '').includes(query.toLowerCase());
+}
+
+function matchesTypeFilter(w, type) {
+  if (type === 'all') return true;
+  if (type === 'Notes') return w.activity_sub_type === 'Notes';
+  if (type === 'Other') {
+    return categorise(w) === 'Other';
+  }
+  return w.activity_type === type;
+}
+
+function matchesExtra(w, extra) {
+  if (!extra) return true;
+  if (extra === 'comments') return (w.comments || []).length > 0;
+  if (extra === 'favourites') return favourites.has(w.key);
+  return true;
+}
+
+function getFilteredResults() {
+  return workouts.filter(w =>
+    matchesSearch(w, currentSearch) &&
+    matchesTypeFilter(w, currentTypeFilter) &&
+    matchesExtra(w, currentExtra)
+  );
+}
+
+// ===================== RENDERING =====================
+function renderSessionCard(w) {
+  const cat = categorise(w);
+  const tagCls = tagClass(cat);
+  const dateMain = fmtDate(w.date);
+  const dow = dayOfWeek(w.date);
+  const isFav = favourites.has(w.key);
+
+  // Metric tags (compact, on header)
+  const metricTags = [];
+  if (w.activity?.actual?.distance_km) {
+    metricTags.push(`${w.activity.actual.distance_km.toFixed(2)} km`);
+  }
+  const dur = fmtDuration(w.activity?.actual?.duration_s);
+  if (dur) metricTags.push(dur);
+  if (w.activity?.actual?.pace) metricTags.push(`${w.activity.actual.pace}/km`);
+
+  const commentCount = (w.comments || []).length;
+
+  return `
+    <article class="session" data-key="${w.key}">
+      <div class="session-header" onclick="toggleSession('${w.key}')">
+        <div class="session-date">
+          <span class="day-of-week">${dow}</span>
+          <span class="date-main">${dateMain}</span>
+        </div>
+        <div class="session-title-block">
+          <div class="session-title">${highlight(w.name || '(untitled session)', currentSearch)}</div>
+          <div class="session-tags">
+            <span class="session-tag ${tagCls}">${tagLabel(w)}</span>
+            ${metricTags.map(t => `<span class="session-tag metric">${t}</span>`).join('')}
+            ${commentCount > 0 ? `<span class="session-tag comments">${commentCount} comment${commentCount > 1 ? 's' : ''}</span>` : ''}
+          </div>
+        </div>
+        <button class="star-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavourite('${w.key}')" title="Favourite this session">
+          ${isFav ? '★' : '☆'}
+        </button>
+      </div>
+      <div class="session-body">
+        ${renderSessionBody(w)}
+      </div>
+    </article>
+  `;
+}
+
+function parseStepDuration(d) {
+  // duration is "MM:SS" or "M:SS" — convert to seconds
+  if (!d) return 0;
+  const parts = d.split(':');
+  if (parts.length === 2) return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+  return parseInt(d, 10) || 0;
+}
+
+function fmtStepDuration(d) {
+  // Take "5:00" and turn into "5 min", "00:15" -> "15 sec"
+  if (!d) return '';
+  const secs = parseStepDuration(d);
+  if (secs === 0) return d;
+  if (secs < 60) return `${secs} sec`;
+  if (secs % 60 === 0) return `${secs / 60} min`;
+  return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+}
+
+function intensityClass(intensity) {
+  const i = (intensity || '').toLowerCase();
+  if (['warmup','warm_up','warm-up'].includes(i)) return 'warmup';
+  if (['cooldown','cool_down','cool-down'].includes(i)) return 'cooldown';
+  if (['active','interval','work'].includes(i)) return 'active';
+  if (['rest','recovery','easy'].includes(i)) return 'rest';
+  return 'other';
+}
+
+function intensityLabel(intensity) {
+  const i = (intensity || '').toLowerCase();
+  if (i === 'warmup') return 'Warmup';
+  if (i === 'cooldown') return 'Cooldown';
+  if (i === 'active') return 'Work';
+  if (i === 'rest') return 'Recovery';
+  return intensity || '—';
+}
+
+function totalStructuredDuration(steps) {
+  let total = 0;
+  for (const s of steps) {
+    if (s.type === 'repeat') {
+      const inner = totalStructuredDuration(s.steps || []);
+      total += inner * (s.repeats || 1);
+    } else {
+      total += parseStepDuration(s.duration);
+    }
+  }
+  return total;
+}
+
+function renderStep(step) {
+  const cls = intensityClass(step.intensity);
+  const label = intensityLabel(step.intensity);
+  const name = step.name && step.name.trim() ? step.name.trim() : label;
+  const showDetail = step.name && step.name.trim() && step.name.trim() !== label;
+  const duration = step.duration ? fmtStepDuration(step.duration) :
+                   (step.distance ? `${step.distance} ${step.dist_unit || ''}` : '—');
+
+  return `
+    <div class="step-row">
+      <span class="step-intensity-marker ${cls}">${label}</span>
+      <div>
+        <div class="step-label">${escapeHTML(showDetail ? name : label)}</div>
+        ${showDetail && name !== label ? '' : ''}
+      </div>
+      <span class="step-duration">${escapeHTML(duration)}</span>
+    </div>
+  `;
+}
+
+function renderStructuredSteps(steps) {
+  return steps.map(s => {
+    if (s.type === 'repeat') {
+      const innerDuration = totalStructuredDuration(s.steps || []);
+      const totalDuration = innerDuration * (s.repeats || 1);
+      return `
+        <div class="repeat-block">
+          <div class="repeat-header">Repeat ${s.repeats}× &middot; ${fmtStepDuration(secsToDur(totalDuration))} total</div>
+          ${(s.steps || []).map(renderStep).join('')}
+        </div>
+      `;
+    }
+    return renderStep(s);
+  }).join('');
+}
+
+function secsToDur(secs) {
+  // inverse of parseStepDuration — returns "M:SS"
+  if (!secs) return '0:00';
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function renderPrescription(sw) {
+  if (!sw || !sw.steps || sw.steps.length === 0) return '';
+  const total = totalStructuredDuration(sw.steps);
+  return `
+    <div class="body-section">
+      <div class="body-label">Coach prescribed</div>
+      <div class="prescription">
+        <div class="prescription-header">
+          <div class="prescription-title">${escapeHTML(sw.name || 'Workout')}</div>
+          <div class="prescription-total">${fmtStepDuration(secsToDur(total))} planned</div>
+        </div>
+        ${renderStructuredSteps(sw.steps)}
+      </div>
+    </div>
+  `;
+}
+
+function renderSessionBody(w) {
+  let html = '';
+
+  // Coach prescription FIRST if it exists — most useful info up top
+  if (w.structured_workout) {
+    html += renderPrescription(w.structured_workout);
+  }
+
+  if (w.description) {
+    html += `
+      <div class="body-section">
+        <div class="body-label">${w.structured_workout ? 'Coach notes' : 'Workout'}</div>
+        <div class="description">${highlight(w.description, currentSearch)}</div>
+      </div>
+    `;
+  }
+
+  // Metrics
+  const a = w.activity?.actual;
+  if (a) {
+    const items = [];
+    if (a.distance_km != null && a.distance_km > 0) {
+      items.push({ label: 'Distance', value: a.distance_km.toFixed(2), unit: 'km' });
+    }
+    if (a.duration_s) {
+      items.push({ label: 'Duration', value: fmtDuration(a.duration_s), unit: '' });
+    }
+    if (a.pace) {
+      items.push({ label: 'Avg pace', value: a.pace, unit: '/km' });
+    }
+    if (a.hr_avg) {
+      items.push({ label: 'Avg HR', value: a.hr_avg, unit: 'bpm' });
+    }
+    if (a.hr_max) {
+      items.push({ label: 'Max HR', value: a.hr_max, unit: 'bpm' });
+    }
+    if (a.elevation_gain_m) {
+      items.push({ label: 'Elevation', value: '+' + a.elevation_gain_m, unit: 'm' });
+    }
+    if (a.calories) {
+      items.push({ label: 'Calories', value: a.calories, unit: 'kcal' });
+    }
+    if (items.length > 0) {
+      html += `
+        <div class="body-section">
+          <div class="body-label">Recorded</div>
+          <div class="metrics-grid">
+            ${items.map(i => `
+              <div class="metric-item">
+                <div class="metric-label">${i.label}</div>
+                <div class="metric-value">${i.value}<span class="metric-unit">${i.unit}</span></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // Laps (intervals)
+  if (w.activity?.laps && w.activity.laps.length > 1) {
+    html += `
+      <div class="body-section">
+        <div class="body-label">Splits</div>
+        <table class="laps-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Distance</th>
+              <th>Duration</th>
+              <th>Pace</th>
+              <th>HR avg</th>
+              <th>HR max</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${w.activity.laps.map(l => `
+              <tr>
+                <td>${l.number}</td>
+                <td>${l.distance_km != null ? l.distance_km.toFixed(2) + ' km' : '—'}</td>
+                <td>${fmtDuration(l.duration_s) || '—'}</td>
+                <td>${l.pace || '—'}</td>
+                <td>${l.hr_avg || '—'}</td>
+                <td>${l.hr_max || '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // Comments
+  if ((w.comments || []).length > 0) {
+    html += `
+      <div class="body-section">
+        <div class="body-label">Discussion</div>
+        ${w.comments.map(c => `
+          <div class="comment ${c.role || ''}">
+            <div class="comment-meta">
+              <div class="comment-author">${escapeHTML(c.author || 'Unknown')}<span class="role-tag">${c.role || ''}</span></div>
+              <div class="comment-time">${fmtTimestamp(c.timestamp)}</div>
+            </div>
+            <div class="comment-text">${highlight(c.text || '', currentSearch)}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  return html || '<div class="body-section"><div class="description" style="color: var(--ink-faint); font-style: italic;">No description recorded for this session.</div></div>';
+}
+
+function renderResults() {
+  const results = getFilteredResults();
+  const meta = document.getElementById('results-meta');
+  const container = document.getElementById('results');
+
+  let parts = [`${results.length} session${results.length === 1 ? '' : 's'}`];
+  if (currentSearch) parts.push(`for "${currentSearch}"`);
+  if (currentTypeFilter !== 'all') parts.push(`· ${currentTypeFilter.toLowerCase()}`);
+  if (currentExtra === 'comments') parts.push('· with comments');
+  if (currentExtra === 'favourites') parts.push('· favourites');
+  meta.textContent = parts.join(' ');
+
+  if (results.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>No sessions match</h3>
+        <p>Try a different search or clear the filters.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Sort: most recent first
+  const sorted = [...results].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  container.innerHTML = sorted.map(renderSessionCard).join('');
+}
+
+function toggleSession(key) {
+  const el = document.querySelector(`[data-key="${key}"]`);
+  if (el) el.classList.toggle('expanded');
+}
+
+function toggleFavourite(key) {
+  if (favourites.has(key)) favourites.delete(key);
+  else favourites.add(key);
+  localStorage.setItem(FAV_KEY, JSON.stringify([...favourites]));
+
+  // Update the star icon in place without re-rendering
+  document.querySelectorAll(`[data-key="${key}"] .star-btn`).forEach(btn => {
+    const isFav = favourites.has(key);
+    btn.classList.toggle('active', isFav);
+    btn.textContent = isFav ? '★' : '☆';
+  });
+
+  // If currently filtering by favourites, re-render
+  if (currentExtra === 'favourites') {
+    renderResults();
+  }
+}
+
+// ===================== BROWSE PANEL =====================
+function renderBrowse() {
+  const container = document.getElementById('browse-content');
+
+  // Group by week (most recent first)
+  const byWeek = {};
+  for (const w of workouts) {
+    if (!w.date) continue;
+    const wk = weekStartString(w.date);
+    if (!byWeek[wk]) byWeek[wk] = [];
+    byWeek[wk].push(w);
+  }
+
+  const weeks = Object.keys(byWeek).sort().reverse();
+
+  container.innerHTML = weeks.map(wk => {
+    const sessions = byWeek[wk].sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+    const weekEnd = new Date(wk);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const runCount = sessions.filter(s => s.activity_type === 'Run').length;
+    const strengthCount = sessions.filter(s => s.activity_type === 'Strength Training').length;
+    const totalKm = sessions.reduce((sum, s) => sum + (s.activity?.actual?.distance_km || 0), 0);
+
+    return `
+      <div class="week-block">
+        <div class="week-header">
+          <div class="week-label">${fmtDate(wk)} — ${fmtDate(weekEnd.toISOString().slice(0,10))}</div>
+          <div class="week-summary">${runCount} run${runCount !== 1 ? 's' : ''} · ${strengthCount} strength${totalKm > 0 ? ' · ' + totalKm.toFixed(1) + ' km' : ''}</div>
+        </div>
+        ${sessions.map(renderSessionCard).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+// ===================== STATS PANEL =====================
+function renderStats() {
+  const container = document.getElementById('stats-content');
+  const c = archive.counts;
+
+  // High-level stat cards
+  const totalKm = workouts.reduce((sum, w) => sum + (w.activity?.actual?.distance_km || 0), 0);
+  const totalSeconds = workouts.reduce((sum, w) => sum + (w.activity?.actual?.duration_s || 0), 0);
+  const totalHours = totalSeconds / 3600;
+
+  // Group by week for chart
+  const weekData = {};
+  for (const w of workouts) {
+    if (!w.date) continue;
+    const wk = weekStartString(w.date);
+    if (!weekData[wk]) weekData[wk] = { run: 0, strength: 0, km: 0 };
+    if (w.activity_type === 'Run') {
+      weekData[wk].run++;
+      weekData[wk].km += w.activity?.actual?.distance_km || 0;
+    } else if (w.activity_type === 'Strength Training') {
+      weekData[wk].strength++;
+    }
+  }
+  const weekKeys = Object.keys(weekData).sort();
+  const maxKm = Math.max(0.5, ...weekKeys.map(k => weekData[k].km));
+  const maxSessions = Math.max(1, ...weekKeys.map(k => weekData[k].run + weekData[k].strength));
+
+  // Most-used exercises (extracted from descriptions)
+  const exerciseCounts = countExerciseTerms(workouts);
+  const topExercises = [...exerciseCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12);
+  const maxExerciseCount = topExercises[0]?.[1] || 1;
+
+  // Comment activity
+  const commentMonths = {};
+  for (const w of workouts) {
+    for (const cm of (w.comments || [])) {
+      if (!cm.timestamp) continue;
+      const m = cm.timestamp.slice(0, 7);
+      commentMonths[m] = (commentMonths[m] || 0) + 1;
+    }
+  }
+
+  container.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total sessions</div>
+        <div class="stat-value">${c.total}</div>
+        <div class="stat-detail">${c.runs} runs · ${c.strength} strength · ${c.notes} notes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Distance run</div>
+        <div class="stat-value">${totalKm.toFixed(0)}<span class="stat-unit">km</span></div>
+        <div class="stat-detail">across ${c.runs} runs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Time logged</div>
+        <div class="stat-value">${totalHours.toFixed(0)}<span class="stat-unit">hrs</span></div>
+        <div class="stat-detail">${(totalSeconds / 60 / c.total).toFixed(0)} min per session avg</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Discussion</div>
+        <div class="stat-value">${c.total_comments || 0}</div>
+        <div class="stat-detail">${c.with_comments} sessions discussed</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">Weekly distance run</div>
+      <div class="bar-chart">
+        ${weekKeys.map(k => {
+          const h = (weekData[k].km / maxKm) * 100;
+          return `<div class="bar run" style="height: ${Math.max(2, h)}%" data-tooltip="${fmtDate(k)}: ${weekData[k].km.toFixed(1)} km"></div>`;
+        }).join('')}
+      </div>
+      <div class="chart-x-labels">
+        <span>${fmtDate(weekKeys[0])}</span>
+        <span>${fmtDate(weekKeys[Math.floor(weekKeys.length / 2)])}</span>
+        <span>${fmtDate(weekKeys[weekKeys.length - 1])}</span>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">Sessions per week — runs &amp; strength</div>
+      <div class="bar-chart" style="gap: 1px;">
+        ${weekKeys.map(k => {
+          const total = weekData[k].run + weekData[k].strength;
+          const h = (total / maxSessions) * 100;
+          // Stacked bar: strength on top, run on bottom
+          const runH = (weekData[k].run / maxSessions) * 100;
+          const strengthH = (weekData[k].strength / maxSessions) * 100;
+          return `
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-width: 4px;" data-tooltip="${fmtDate(k)}: ${weekData[k].run} runs, ${weekData[k].strength} strength">
+              <div class="bar strength" style="height: ${strengthH}%"></div>
+              <div class="bar run" style="height: ${runH}%"></div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div class="chart-x-labels">
+        <span>${fmtDate(weekKeys[0])}</span>
+        <span>${fmtDate(weekKeys[Math.floor(weekKeys.length / 2)])}</span>
+        <span>${fmtDate(weekKeys[weekKeys.length - 1])}</span>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item"><span class="swatch run"></span>Runs</div>
+        <div class="legend-item"><span class="swatch strength"></span>Strength</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">Most-mentioned exercises</div>
+      <div class="breakdown-list">
+        ${topExercises.map(([name, count]) => `
+          <div>
+            <div class="breakdown-row">
+              <span class="breakdown-name">${escapeHTML(name)}</span>
+              <span class="breakdown-count">${count}</span>
+            </div>
+            <div class="breakdown-bar">
+              <div class="bar-fill"><div class="fill" style="width: ${(count / maxExerciseCount * 100).toFixed(1)}%"></div></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// Naive exercise extractor — looks for common exercise names in descriptions
+function countExerciseTerms(workouts) {
+  const counts = new Map();
+  // Curated list of common strength/mobility exercises that appear in coach prescriptions
+  const terms = [
+    'Squat', 'Lunge', 'Deadlift', 'Hip Thrust', 'Glute Bridge',
+    'Calf Raise', 'Plank', 'Bird Dog', 'Clamshell', 'Crab Walk',
+    'Air Squat', 'Banded Adduction', 'Banded Abduction',
+    'Bicep Curl', 'Tricep', 'Press', 'Row', 'Pull',
+    'Single Leg', 'Step Up', 'Bulgarian Split Squat', 'Split Squat',
+    'Hip Circle', 'Leg Swing', 'Ankle Circle',
+    'Plantarflexion', 'Dorsiflexion',
+    'Stride', 'Crunch', 'Sit Up', 'Russian Twist',
+    'Mountain Climber', 'Burpee', 'Push Up', 'Wall Sit',
+    'Side Plank', 'Dead Bug', 'Superman',
+    'RDL', 'Romanian Deadlift', 'Goblet',
+    'Curl', 'Raise', 'Hold',
+  ];
+
+  for (const w of workouts) {
+    const text = (w.description || '');
+    if (!text) continue;
+    for (const term of terms) {
+      const re = new RegExp('\\b' + term.replace(/ /g, '\\s+') + '\\b', 'i');
+      if (re.test(text)) {
+        counts.set(term, (counts.get(term) || 0) + 1);
+      }
+    }
+  }
+  return counts;
+}
+
+// ===================== EVENT WIRING =====================
+function setupEventListeners() {
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
+      // Lazy render heavy panels
+      if (tab === 'browse' && !document.querySelector('#browse-content .week-block')) renderBrowse();
+      if (tab === 'stats' && !document.querySelector('#stats-content .stat-card')) renderStats();
+    });
+  });
+
+  // Search
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('input', (e) => {
+    currentSearch = e.target.value.trim();
+    renderResults();
+  });
+
+  // Type chips
+  document.querySelectorAll('.type-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.type-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentTypeFilter = chip.dataset.type;
+      renderResults();
+    });
+  });
+
+  // Extra filter chips (toggleable)
+  document.querySelectorAll('.extra-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const val = chip.dataset.extra;
+      if (currentExtra === val) {
+        currentExtra = null;
+        chip.classList.remove('active');
+      } else {
+        document.querySelectorAll('.extra-chip').forEach(c => c.classList.remove('active'));
+        currentExtra = val;
+        chip.classList.add('active');
+      }
+      renderResults();
+    });
+  });
+}
+
+// ===================== INIT =====================
+async function init() {
+  try {
+    const res = await fetch('archive.json');
+    if (!res.ok) throw new Error(`${res.status}`);
+    archive = await res.json();
+  } catch (err) {
+    document.getElementById('results').innerHTML = `
+      <div class="empty-state">
+        <h3>Could not load archive</h3>
+        <p>Make sure <code>archive.json</code> is in the same folder as this HTML file.</p>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem;">Error: ${escapeHTML(err.message)}</p>
+      </div>
+    `;
+    document.getElementById('meta-line').textContent = 'Archive failed to load';
+    return;
+  }
+
+  workouts = archive.workouts;
+  // Pre-build search index
+  for (const w of workouts) {
+    w._searchText = buildSearchableText(w);
+  }
+
+  // Update meta line
+  const c = archive.counts;
+  const dr = archive.date_range;
+  document.getElementById('meta-line').textContent = `${c.total} sessions · ${fmtDate(dr.start)} → ${fmtDate(dr.end)} · coach: ${archive.coach || 'unknown'}`;
+
+  setupEventListeners();
+  renderResults();
+}
+
+// Expose for inline handlers
+window.toggleSession = toggleSession;
+window.toggleFavourite = toggleFavourite;
+
+init();
+</script>
+
+</body>
+</html>
